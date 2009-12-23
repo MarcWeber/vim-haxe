@@ -95,12 +95,18 @@ fun! HaxeCheckForGlobals()
     endif
 endfun
 
-" Map the keys /p and /l to HaxeAddClasspath() and HaxeAddLib() respectively.
-" Mapping could be different if you changed your <LocalLeader> key.
-autocmd BufNewFile,BufRead *.hx nnoremap <silent> <buffer> <LocalLeader>p :call HaxeAddClasspath()<Cr>
-autocmd BufNewFile,BufRead *.hx nnoremap <silent> <buffer> <LocalLeader>l :call HaxeAddLib()<Cr>
-" Declaring errorformat to parse the errors that we may encounter during autocomplete.
-autocmd BufNewFile,BufRead *.hx setlocal errorformat=
-\%f:%l:\ characters\ %\\d%\\+-%c\ %m
-" Check for the global variables on load or new haxe file
-autocmd BufNewFile,BufRead *.hx call HaxeCheckForGlobals()
+if !exists('g:vim_haxe_no_filetype')
+  " Map the keys /p and /l to HaxeAddClasspath() and HaxeAddLib() respectively.
+  " Mapping could be different if you changed your <LocalLeader> key.
+  " set filetype so that the ftplugin/haxe.vim is loaded
+  " Declaring errorformat to parse the errors that we may encounter during autocomplete.
+  " Check for the global variables on load or new haxe file
+  augroup Haxe
+    autocmd BufRead,BufNewFile *.m,*.hx setlocal filetype=haxe
+      \| nnoremap <silent> <buffer> <LocalLeader>p :call HaxeAddClasspath()<Cr>
+      \| nnoremap <silent> <buffer> <LocalLeader>l :call HaxeAddLib()<Cr>
+      \| setlocal errorformat=%f:%l:\ characters\ %\\d%\\+-%c\ %m
+      \| autocmd BufNewFile,BufRead *.hx call HaxeCheckForGlobals()
+  augroup end
+endif
+
