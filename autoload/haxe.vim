@@ -129,3 +129,14 @@ fun! haxe#GetCompletions(line, col, base)
   return lstComplete " Finally, return the list with completions
 
 endf
+
+" The main omnicompletion function
+fun! haxe#Complete(findstart,base)
+    if a:findstart
+        let [haxePos, chars_in_line] = haxe#CursorPositions()
+        let b:haxePos = haxePos
+        return chars_in_line
+    else
+        return haxe#GetCompletions(line('.'), b:haxePos, a:base)
+    endif
+endfun

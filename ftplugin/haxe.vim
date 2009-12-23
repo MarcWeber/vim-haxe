@@ -10,5 +10,5 @@ endif
 
 if !exists('g:vim_haxe_no_completion')
   setlocal completeopt=preview,menu,menuone
-  setlocal omnifunc=HaxeComplete
+  setlocal omnifunc=haxe#Complete
 endif

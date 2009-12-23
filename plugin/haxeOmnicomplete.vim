@@ -66,16 +66,6 @@ fun! HaxeAddLib()
     call add(b:haxeLibs,cp)
 endfun
 
-" The main omnicompletion function
-fun! HaxeComplete(findstart,base)
-    if a:findstart
-        let [b:haxePos, chars_in_line] = haxe#CursorPositions()
-        return chars_in_line
-    else
-      return haxe#GetCompletions(line('.'), b:haxePos, a:base)
-    endif
-endfun
-
 " This function gets rid of the XML tags in the completion list.
 " There must be a better way, but this works for now.
 fun! HaxePrepareList(v)
