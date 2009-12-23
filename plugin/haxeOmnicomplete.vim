@@ -69,9 +69,11 @@ endfun
 " The main omnicompletion function
 fun! HaxeComplete(findstart,base)
     if a:findstart
-        let bytePos = line2byte(line('.')) + col('.') - 2 " First, we find our current position in the file
+        let line_till_cursor = substitute(getline('.')[:col('.')],'[^. \t()]*$','','')
+        let chars_in_line = strlen(line_till_cursor)
+        let bytePos = line2byte(line('.')) + chars_in_line -1 " First, we find our current position in the file
         let b:haxePos = string(bytePos) " By the way vim works, we must keep the position in a buffer variable.
-        return bytePos " Useless but vim expects this call to return a number.
+        return chars_in_line
     else
         " Start constructing the command for haxe
         " The classname will be based on the current filename
@@ -81,9 +83,18 @@ fun! HaxeComplete(findstart,base)
         let filename = expand("%:p:h")."/".substitute(expand("%:t"),"^.","\\u&","")
         "let filename = $TEMP."\\".substitute(expand("%:t"),"^.","\\u&","")
         execute "w"
+       if exists('g:haxe_build_hxml')
+          let contents = join(readfile(g:haxe_build_hxml), " ")
+          " remove -main foo
+          let contents = substitute(contents, '-main\s*[^ ]*', '', 'g')
+          " remove target.swf
+          " let contents = substitute(contents, '[^ ]*\.swf', '', 'g')
+          let args_from_hxml = contents
+        else
+          let args_from_hxml = ""
+        endif
         " Construction of the base command line
-        let strCmd="haxe --no-output -main " . classname . " --display " . '"' . filename . '"' . "@" . b:haxePos . " -cp " . '"' . expand("%:p:h") . '"'
-        let @" = strCmd
+        let strCmd="haxe --no-output -main " . classname . " ". args_from_hxml . " --display " . '"' . filename . '"' . "@" . b:haxePos . " -cp " . '"' . expand("%:p:h") . '"'
         " If this haxe file uses other classpaths, we check they are declared
         " in the buffer variable haxeClasspath. To add classpaths, call
         " HaxeAddClasspath()
@@ -107,6 +118,7 @@ fun! HaxeComplete(findstart,base)
         "line to pass to a system() call.
 
         " We keep the results from the comand in a variable
+        let g:strCmd = strCmd
         let res=system(strCmd)
         if v:shell_error != 0 "If there was an error calling haxe, we return no matches and inform the user
             if !exists("b:haxeErrorFile")
@@ -155,10 +167,15 @@ fun! HaxeComplete(findstart,base)
 			if len(element) == 1 " Means we only got a package class name
 				let dicTmp={'word': element[0]}
 			else " Its a method name
-				let dicTmp={'word': element[0], 'menu': element[1]}
+				let dicTmp={'word': element[0], 'menu': element[1] }
+                                if element[1] =~ "->"
+                                  let dicTmp["word"] .= "("
+                                endif
 			endif
             call add(lstComplete,dicTmp)
         endfor
+        call filter(lstComplete,'v:val["word"] =~ '.string('^'.a:base))
+        " add ( if the completion is a function
         return lstComplete " Finally, return the list with completions
     endif
 endfun
