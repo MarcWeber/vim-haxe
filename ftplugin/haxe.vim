@@ -1,13 +1,14 @@
 if !exists('g:vim_haxe_no_abbrevs')
   " some abbreviations I find useful
   abbrev spf static public function
-fi
+endif
 
 if !exists('g:vim_haxe_no_indentation')
   " setlocal autoindent
   setlocal cindent
-fi
+endif
 
 if !exists('g:vim_haxe_no_completion')
   setlocal completeopt=preview,menu,menuone
-fi
+  setlocal omnifunc=HaxeComplete
+endif

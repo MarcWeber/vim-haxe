@@ -105,8 +105,6 @@ fun! HaxeCheckForGlobals()
     endif
 endfun
 
-" Map the haxe filetypes to use HaxeComplete for omnicompletion
-autocmd BufNewFile,BufRead *.hx set omnifunc=HaxeComplete
 " Map the keys /p and /l to HaxeAddClasspath() and HaxeAddLib() respectively.
 " Mapping could be different if you changed your <LocalLeader> key.
 autocmd BufNewFile,BufRead *.hx nnoremap <silent> <buffer> <LocalLeader>p :call HaxeAddClasspath()<Cr>
