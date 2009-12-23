@@ -3,14 +3,12 @@
 fun! haxe#CursorPositions()
   let line_till_cursor = substitute(getline('.')[:col('.')],'[^. \t()]*$','','')
   let chars_in_line = strlen(line_till_cursor)
-  let bytePos = line2byte(line('.')) + chars_in_line -1 " First, we find our current position in the file
-  let haxePos = string(bytePos) " By the way vim works, we must keep the position in a buffer variable.
 
   " haxePos: byte position 
   " chars_in_line: col in line where completion starts. Example:
   "       name.foo() 
   "            ^ here
-  return [haxePos, chars_in_line]
+  return {'line' : line('.'), 'col': chars_in_line }
 endf
 
 " this function writes the current buffer
@@ -22,7 +20,7 @@ endf
 " base: prefix used to filter results
 fun! haxe#GetCompletions(line, col, base)
 
-  let bytePos = line2byte(a:line) + a:col -1
+  let bytePos = string(line2byte(a:line) + a:col -1)
 
   " Start constructing the command for haxe
   " The classname will be based on the current filename
@@ -124,7 +122,7 @@ fun! haxe#GetCompletions(line, col, base)
     endif
     call add(lstComplete,dicTmp)
   endfor
-  call filter(lstComplete,'v:val["word"] =~ '.string('^'.base))
+  call filter(lstComplete,'v:val["word"] =~ '.string('^'.a:base))
   " add ( if the completion is a function
   return lstComplete " Finally, return the list with completions
 
@@ -133,10 +131,9 @@ endf
 " The main omnicompletion function
 fun! haxe#Complete(findstart,base)
     if a:findstart
-        let [haxePos, chars_in_line] = haxe#CursorPositions()
-        let b:haxePos = haxePos
-        return chars_in_line
+        let b:haxePos = haxe#CursorPositions()
+        return b:haxePos['col']
     else
-        return haxe#GetCompletions(line('.'), b:haxePos, a:base)
+        return haxe#GetCompletions(b:haxePos['line'], b:haxePos['col'], a:base)
     endif
 endfun
