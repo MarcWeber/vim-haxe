@@ -20,7 +20,11 @@ INSTALLATION
 Ok, to install, simply copy this script to somewhere in
 your hard disk and source it from your vimrc file, like this:
 
-source C:\Path_to_file\haxeOmnicomplete.vim
+Put this into your .vimrc:
+
+set runtimepath+=PATH_TO_THIS_REPO
+
+and you should be done
 
 _______________________________________________
 USAGE (QUICK AND DIRTY)
