@@ -1,8 +1,11 @@
 " functions will be loaded lazily when needed
 
+fun! haxe#LineTillCursor()
+  return getline('.')[:col('.')]
+endf
 fun! haxe#CursorPositions()
-  let line_till_cursor = substitute(getline('.')[:col('.')],'[^. \t()]*$','','')
-  let chars_in_line = strlen(line_till_cursor)
+  let line_till_completion = substitute(haxe#LineTillCursor(),'[^. \t()]*$','','')
+  let chars_in_line = strlen(line_till_completion)
 
   " haxePos: byte position 
   " chars_in_line: col in line where completion starts. Example:
@@ -19,7 +22,6 @@ endf
 "
 " base: prefix used to filter results
 fun! haxe#GetCompletions(line, col, base)
-
   let bytePos = string(line2byte(a:line) + a:col -1)
 
   " Start constructing the command for haxe
@@ -30,7 +32,8 @@ fun! haxe#GetCompletions(line, col, base)
   let filename = expand("%:p:h")."/".substitute(expand("%:t"),"^.","\\u&","")
   "let filename = $TEMP."\\".substitute(expand("%:t"),"^.","\\u&","")
   
-  write
+  " silently write buffer
+  silent! write
   if exists('g:haxe_build_hxml')
     let contents = join(readfile(g:haxe_build_hxml), " ")
     " remove -main foo
@@ -137,3 +140,27 @@ fun! haxe#Complete(findstart,base)
         return haxe#GetCompletions(b:haxePos['line'], b:haxePos['col'], a:base)
     endif
 endfun
+
+" must be called using <c-r>=haxe#DefineLocalVar()<c-r> from an imap mapping
+" defines a typed local var
+" flash.Lib.current -> var mc:flash.display.MovieClip = flash.Lib.current;
+fun! haxe#DefineLocalVar()
+  " everything including the last component. But trailing () must be removed
+  let lineTC = haxe#LineTillCursor()
+  let line_till_completion = substitute(lineTC,'(.*$','','')
+  let line_pref = substitute(lineTC,'[^. \t()]*$','','')
+  let base = substitute(line_till_completion,'.\{-}\([^ .()]*\)$','\1','')
+
+  let completions = haxe#GetCompletions(line('.'), strlen(line_pref), base)
+  if len(completions) == 1
+    let type = substitute(completions[0]['menu'],'.\{-}\([^ ()]*\)$','\1','')
+    let lastTypeComponent = substitute(type,'.*\.','','')
+    exec 'let name = '.(exists('g:vim_hax_local_name_expr') ? g:vim_hax_local_name_expr : 'tolower(lastTypeComponent)')
+    let maybeSemicolon = line_pref =~ ';$' ? ';' : ''
+    " TODO add suffix 1,2,.. if name is already in use!
+    return maybeSemicolon."\<esc>Ivar ".name.':'.type." = \<esc>"
+  else
+    echoe "1 completion expceted but got: ".len(completions)
+    return ''
+  endif
+endf

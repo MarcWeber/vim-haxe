@@ -12,3 +12,10 @@ if !exists('g:vim_haxe_no_completion')
   setlocal completeopt=preview,menu,menuone
   setlocal omnifunc=haxe#Complete
 endif
+
+if !exists('g:vim_haxe_no_mappings')
+  " define local var
+  inoremap <buffer> <c-l> <c-r>=haxe#DefineLocalVar()<cr>
+  setlocal completeopt=preview,menu,menuone
+  setlocal omnifunc=haxe#Complete
+endif
