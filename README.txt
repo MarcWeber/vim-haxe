@@ -17,14 +17,18 @@ returned. Simple, huh?
 _______________________________________________
 INSTALLATION
 
-Ok, to install, simply copy this script to somewhere in
-your hard disk and source it from your vimrc file, like this:
+get this distribution form http://github.com/MarcWeber/vim-haxe
 
 Put this into your .vimrc:
 
 set runtimepath+=PATH_TO_THIS_REPO
 
+let g:haxe_build_hxml="build.hxml"
+
 and you should be done
+
+Use <c-x><c-o> to get completion
+Use <c-l> to define a local command
 
 _______________________________________________
 USAGE (QUICK AND DIRTY)
