@@ -152,13 +152,22 @@ fun! haxe#DefineLocalVar()
   let base = substitute(line_till_completion,'.\{-}\([^ .()]*\)$','\1','')
 
   let completions = haxe#GetCompletions(line('.'), strlen(line_pref), base)
+  " filter again, exact match
+  call filter(completions,'v:val["word"] =~ '.string('^'.base.'$'))
   if len(completions) == 1
-    let type = substitute(completions[0]['menu'],'.\{-}\([^ ()]*\)$','\1','')
-    let lastTypeComponent = substitute(type,'.*\.','','')
-    exec 'let name = '.(exists('g:vim_hax_local_name_expr') ? g:vim_hax_local_name_expr : 'tolower(lastTypeComponent)')
+    let item = completions[0]
+    if has_key(item, 'menu')
+      let type = substitute(completions[0]['menu'],'.\{-}\([^ ()]*\)$','\1','')
+      let name = substitute(type,'.*\.','','')
+      let type = ':'.type
+    else
+      let type = ''
+      let name = base
+    endif
+    exec 'let name = '.(exists('g:vim_hax_local_name_expr') ? g:vim_hax_local_name_expr : 'tolower(name)')
     let maybeSemicolon = line_pref =~ ';$' ? ';' : ''
     " TODO add suffix 1,2,.. if name is already in use!
-    return maybeSemicolon."\<esc>Ivar ".name.':'.type." = \<esc>"
+    return maybeSemicolon."\<esc>Ivar ".name.type." = \<esc>"
   else
     echoe "1 completion expceted but got: ".len(completions)
     return ''
