@@ -11,3 +11,6 @@ Added support for package name / class name completion.
 Added support for type completion in function calls
 (pretty useless to me, but who knows...)
 
+Well, I won't keep this file up to date.
+You can read the commit messages of the git repository at
+http://github.com/MarcWeber/vim-haxe
