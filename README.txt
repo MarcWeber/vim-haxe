@@ -21,7 +21,9 @@ get this distribution form http://github.com/MarcWeber/vim-haxe
 
 Put this into your .vimrc:
 
+" this must be the very first line:
 set runtimepath+=PATH_TO_THIS_REPO
+filetype plugin on
 
 let g:haxe_build_hxml="build.hxml"
 
@@ -29,6 +31,10 @@ and you should be done
 
 Use <c-x><c-o> to get completion
 Use <c-l> to define a local command
+
+Note: On the haxe.org site there are syntax plugins as well.
+There are two so I have to think about which is the best way providing both?
+Maybe using a big fat if .. else endif ?
 
 _______________________________________________
 USAGE (QUICK AND DIRTY)
