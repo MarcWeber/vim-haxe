@@ -1,0 +1,13 @@
+1.0 22-Aug-2008 Initial Release
+
+1.01 04-Sep-2008 Fixed incorrect behavior on paths with spaces
+(Thanks to Laurence Taylor <polysemantic_at_gmail.com> )
+
+1.2 08-Dic-2008 Long overdue update. Fixed another incorrect
+behavior on paths (Thanks again to Laurence Taylor
+<polysemantic_at_gmail.com> ). (Should have applied your patch
+a few months ago...)
+Added support for package name / class name completion.
+Added support for type completion in function calls
+(pretty useless to me, but who knows...)
+
