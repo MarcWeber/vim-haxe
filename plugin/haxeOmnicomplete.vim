@@ -69,10 +69,8 @@ endfun
 " The main omnicompletion function
 fun! HaxeComplete(findstart,base)
     if a:findstart
-        let line_till_cursor = substitute(getline('.')[:col('.')],'[^. \t()]*$','','')
-        let chars_in_line = strlen(line_till_cursor)
-        let bytePos = line2byte(line('.')) + chars_in_line -1 " First, we find our current position in the file
-        let b:haxePos = string(bytePos) " By the way vim works, we must keep the position in a buffer variable.
+        let [b:haxePos, chars_in_line] = haxe#CursorPositions()
+        return chars_in_line
         return chars_in_line
     else
         " Start constructing the command for haxe
