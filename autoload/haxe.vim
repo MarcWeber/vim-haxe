@@ -1,7 +1,7 @@
 " functions will be loaded lazily when needed
 
 fun! haxe#LineTillCursor()
-  return getline('.')[:col('.')]
+  return getline('.')[:col('.')-2]
 endf
 fun! haxe#CursorPositions()
   let line_till_completion = substitute(haxe#LineTillCursor(),'[^. \t()]*$','','')
@@ -12,6 +12,13 @@ fun! haxe#CursorPositions()
   "       name.foo() 
   "            ^ here
   return {'line' : line('.'), 'col': chars_in_line }
+endf
+
+fun! haxe#TmpDir()
+  if !exists('g:vim_haxe_tmp_dir')
+    let g:vim_haxe_tmp_dir = fnamemodify(tempname(),':h')
+  endif
+  return g:vim_haxe_tmp_dir
 endf
 
 " this function writes the current buffer
@@ -29,8 +36,14 @@ fun! haxe#GetCompletions(line, col, base)
   " On both the classname and the filename we make sure
   " the first letter is uppercased.
   let classname = substitute(expand("%:t:r"),"^.","\\u&","")
-  let filename = expand("%:p:h")."/".substitute(expand("%:t"),"^.","\\u&","")
-  "let filename = $TEMP."\\".substitute(expand("%:t"),"^.","\\u&","")
+
+  let tmpDir = haxe#TmpDir()
+
+  " somehowe haxe can't parse the file if trailing ) or such appear
+  " Thus truncate the file at the location where completion starts
+  " This also means that error locations must be rewritten
+  let tmpFilename = tmpDir.'/'.expand('%:t')
+  call writefile(getline(1, a:line-1)+[getline('.')[:(a:col-1)]], tmpFilename)
   
   " silently write buffer
   silent! write
@@ -45,7 +58,7 @@ fun! haxe#GetCompletions(line, col, base)
     let args_from_hxml = ""
   endif
   " Construction of the base command line
-  let strCmd="haxe --no-output -main " . classname . " ". args_from_hxml . " --display " . '"' . filename . '"' . "@" . bytePos . " -cp " . '"' . expand("%:p:h") . '"'
+  let strCmd="haxe --no-output -main " . classname . " " . args_from_hxml. " --display " . '"' . tmpFilename . '"' . "@" . bytePos . " -cp " . '"' . expand("%:p:h") . '" -cp "'.tmpDir.'"'
   " If this haxe file uses other classpaths, we check they are declared
   " in the buffer variable haxeClasspath. To add classpaths, call
   " HaxeAddClasspath()
@@ -68,66 +81,67 @@ fun! haxe#GetCompletions(line, col, base)
   "After checking for both classpaths and libs, whe get the final comand
   "line to pass to a system() call.
 
-  " We keep the results from the comand in a variable
-  let g:strCmd = strCmd
-  let res=system(strCmd)
-  if v:shell_error != 0 "If there was an error calling haxe, we return no matches and inform the user
-    if !exists("b:haxeErrorFile")
-      let b:haxeErrorFile = tempname()
+  try
+    " We keep the results from the comand in a variable
+    let g:strCmd = strCmd
+    let res=system(strCmd)
+    call delete(tmpFilename)
+    if v:shell_error != 0 "If there was an error calling haxe, we return no matches and inform the user
+      if !exists("b:haxeErrorFile")
+        let b:haxeErrorFile = tempname()
+      endif
+      throw "lstErrors"
     endif
-    let lstErrors = split(res,"\n")
+
+    let lstXML = split(res,"\n") " We make a list with each line of the xml
+
+    if len(lstXML) == 0 " If there were no lines, then we return no matches
+      return []
+    endif
+    if lstXML[0] != '<list>' "If is not a class definition, we check for type definition
+      if lstXML[0] != '<type>' " If not a type definition then something went wrong... 
+        if !exists("b:haxeErrorFile")
+          let b:haxeErrorFile = tempname()
+        endif
+        throw "lstErrors"
+      else " If it was a type definition
+        call filter(lstXML,'v:val !~ "type>"') " Get rid of the type tags
+        call map(lstXML,'HaxePrepareList(v:val)') " Get rid of the xml in the other lines
+        let lstComplete = [] " Initialize our completion list
+        for item in lstXML " Create a dictionary for each line, and add them to a list
+          let dicTmp={'word': item}
+        endfor
+        call add(lstComplete,dicTmp)
+        return lstComplete " Finally, return the list with completions
+      endif
+    endif
+    call filter(lstXML,'v:val !~ "list>"') " Get rid of the list tags
+    call map(lstXML,'HaxePrepareList(v:val)') " Get rid of the xml in the other lines
+    let lstComplete = [] " Initialize our completion list
+    for item in lstXML " Create a dictionary for each line, and add them to a list
+      let element = split(item,"*")
+      if len(element) == 1 " Means we only got a package class name
+        let dicTmp={'word': element[0]}
+      else " Its a method name
+        let dicTmp={'word': element[0], 'menu': element[1] }
+        if element[1] =~ "->"
+          let dicTmp["word"] .= "("
+        endif
+      endif
+      call add(lstComplete,dicTmp)
+    endfor
+    call filter(lstComplete,'v:val["word"] =~ '.string('^'.a:base))
+    " add ( if the completion is a function
+    return lstComplete " Finally, return the list with completions
+
+  catch lstErrors
+    let lstErrors = split(substitute(res, tmpFilename, expand('%'),'g'),"\n")
     call writefile(lstErrors,b:haxeErrorFile)
     execute "cgetfile ".b:haxeErrorFile
     " Errors will be available for view with the quickfix commands
     cope | wincmd p
     return []
-  endif
-
-  let lstXML = split(res,"\n") " We make a list with each line of the xml
-
-  if len(lstXML) == 0 " If there were no lines, then we return no matches
-    return []
-  endif
-  if lstXML[0] != '<list>' "If is not a class definition, we check for type definition
-    if lstXML[0] != '<type>' " If not a type definition then something went wrong... 
-      if !exists("b:haxeErrorFile")
-        let b:haxeErrorFile = tempname()
-      endif
-      let lstErrors = split(res,"\n")
-      call writefile(lstErrors,b:haxeErrorFile)
-      execute "cgetfile ".b:haxeErrorFile
-      " Errors will be available for view with the quickfix commands
-      cope | wincmd p
-      return [] " For now, let's return no matches
-    else " If it was a type definition
-      call filter(lstXML,'v:val !~ "type>"') " Get rid of the type tags
-      call map(lstXML,'HaxePrepareList(v:val)') " Get rid of the xml in the other lines
-      let lstComplete = [] " Initialize our completion list
-      for item in lstXML " Create a dictionary for each line, and add them to a list
-        let dicTmp={'word': item}
-      endfor
-      call add(lstComplete,dicTmp)
-      return lstComplete " Finally, return the list with completions
-    endif
-  endif
-  call filter(lstXML,'v:val !~ "list>"') " Get rid of the list tags
-  call map(lstXML,'HaxePrepareList(v:val)') " Get rid of the xml in the other lines
-  let lstComplete = [] " Initialize our completion list
-  for item in lstXML " Create a dictionary for each line, and add them to a list
-    let element = split(item,"*")
-    if len(element) == 1 " Means we only got a package class name
-      let dicTmp={'word': element[0]}
-    else " Its a method name
-      let dicTmp={'word': element[0], 'menu': element[1] }
-      if element[1] =~ "->"
-        let dicTmp["word"] .= "("
-      endif
-    endif
-    call add(lstComplete,dicTmp)
-  endfor
-  call filter(lstComplete,'v:val["word"] =~ '.string('^'.a:base))
-  " add ( if the completion is a function
-  return lstComplete " Finally, return the list with completions
+  endtry
 
 endf
 
