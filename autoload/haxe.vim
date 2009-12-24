@@ -59,27 +59,6 @@ fun! haxe#GetCompletions(line, col, base)
   endif
   " Construction of the base command line
   let strCmd="haxe --no-output -main " . classname . " " . args_from_hxml. " --display " . '"' . tmpFilename . '"' . "@" . bytePos . " -cp " . '"' . expand("%:p:h") . '" -cp "'.tmpDir.'"'
-  " If this haxe file uses other classpaths, we check they are declared
-  " in the buffer variable haxeClasspath. To add classpaths, call
-  " HaxeAddClasspath()
-  if exists("b:haxeClasspath")
-    if len(b:haxeClasspath) != 0
-      for x in b:haxeClasspath
-        let strCmd = strCmd . " -cp " . x
-      endfor
-    endif
-  endif
-  " If this haxe file uses libs from haxelib, we check they are declared
-  " in the buffer variable haxeLibs. To add libs, call HaxeAddLib()
-  if exists("b:haxeLibs")
-    if len(b:haxeLibs) != 0
-      for x in b:haxeLibs
-        let strCmd = strCmd . " -lib " . x
-      endfor
-    endif
-  endif
-  "After checking for both classpaths and libs, whe get the final comand
-  "line to pass to a system() call.
 
   try
     " We keep the results from the comand in a variable

@@ -31,41 +31,6 @@
 "
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-" Enough stuff, show me the code!
-" Allows to add a classpath to the comand line used for omnicompletion
-fun! HaxeAddClasspath()
-    if has("gui_running")
-        let cp = inputdialog("Add a classpath: ",'','')
-    else
-        let cp = input("Add a classpath: ",'','')
-    endif
-    if cp == ''
-        return
-    endif
-    if !exists("b:haxeClasspath")
-        let b:haxeClasspath = []
-    endif
-
-    call add(b:haxeClasspath,cp)
-endfun
-
-" Allows to add a haxelib to the comand line used for omnicompletion
-fun! HaxeAddLib()
-    if has("gui_running")
-        let cp = inputdialog("Add a haxelib library: ",'','')
-    else
-        let cp = input("Add a haxelib library: ",'','')
-    endif
-    if cp == ''
-        return
-    endif
-    if !exists("b:haxeLibs")
-        let b:haxeLibs = []
-    endif
-
-    call add(b:haxeLibs,cp)
-endfun
-
 " This function gets rid of the XML tags in the completion list.
 " There must be a better way, but this works for now.
 fun! HaxePrepareList(v)
