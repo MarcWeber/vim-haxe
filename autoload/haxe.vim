@@ -151,7 +151,7 @@ fun! haxe#DefineLocalVar()
     let item = completions[0]
     if has_key(item, 'menu')
       let type = substitute(completions[0]['menu'],'.\{-}\([^ ()]*\)$','\1','')
-      let name = substitute(type,'.*\.','','')
+      let name = substitute(type,'<.*>','','g')
       let type = ':'.type
     else
       let type = ''

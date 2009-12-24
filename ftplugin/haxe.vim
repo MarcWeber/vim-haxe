@@ -1,6 +1,7 @@
 if !exists('g:vim_haxe_no_abbrevs')
   " some abbreviations I find useful
   abbrev spf static public function
+  abbrev sv static var
 endif
 
 if !exists('g:vim_haxe_no_indentation')
