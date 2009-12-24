@@ -107,6 +107,8 @@ if !exists('g:vim_haxe_no_filetype')
       \| nnoremap <silent> <buffer> <LocalLeader>l :call HaxeAddLib()<Cr>
       \| setlocal errorformat=%f:%l:\ characters\ %\\d%\\+-%c\ %m
       \| autocmd BufNewFile,BufRead *.hx call HaxeCheckForGlobals()
+
+    autocmd BufRead,BufNewFile *.hxml setlocal filetype=haxe_hxml
   augroup end
 endif
 
