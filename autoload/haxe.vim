@@ -79,7 +79,7 @@ fun! haxe#GetCompletions(line, col, base)
     call writefile(lstErrors,b:haxeErrorFile)
     execute "cgetfile ".b:haxeErrorFile
     " Errors will be available for view with the quickfix commands
-    cope
+    cope | wincmd p
     return []
   endif
 
@@ -97,7 +97,7 @@ fun! haxe#GetCompletions(line, col, base)
       call writefile(lstErrors,b:haxeErrorFile)
       execute "cgetfile ".b:haxeErrorFile
       " Errors will be available for view with the quickfix commands
-      cope
+      cope | wincmd p
       return [] " For now, let's return no matches
     else " If it was a type definition
       call filter(lstXML,'v:val !~ "type>"') " Get rid of the type tags
