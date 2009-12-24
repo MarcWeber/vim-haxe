@@ -31,35 +31,6 @@
 "
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-" This function gets rid of the XML tags in the completion list.
-" There must be a better way, but this works for now.
-fun! HaxePrepareList(v)
-    let text = substitute(a:v,"\<i n=\"","","")
-    let text = substitute(text,"\"\>\<t\>","*","")
-    let text = substitute(text,"\<[^>]*\>","","g")
-    let text = substitute(text,"\&gt\;",">","g")
-    let text = substitute(text,"\&lt\;","<","g")
-    return text
-endfun
-
-" Called on BufRead and BufNew to check for the globals
-" Again, there must be a better way, feel free to improve
-" and send patch.
-fun! HaxeCheckForGlobals()
-    if exists("g:globalHaxeClasspath")
-        if type(g:globalHaxeClasspath) != type([])
-            return
-        endif
-        let b:haxeClasspath = g:globalHaxeClasspath
-    endif
-    if exists("g:globalHaxeLibs")
-        if type(g:globalHaxeLibs) != type([])
-            return
-        endif
-        let b:haxeLibs = g:globalHaxeLibs
-    endif
-endfun
-
 if !exists('g:vim_haxe_no_filetype')
   " Map the keys /p and /l to HaxeAddClasspath() and HaxeAddLib() respectively.
   " Mapping could be different if you changed your <LocalLeader> key.

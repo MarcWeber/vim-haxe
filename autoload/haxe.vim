@@ -85,7 +85,7 @@ fun! haxe#GetCompletions(line, col, base)
         throw "lstErrors"
       else " If it was a type definition
         call filter(lstXML,'v:val !~ "type>"') " Get rid of the type tags
-        call map(lstXML,'HaxePrepareList(v:val)') " Get rid of the xml in the other lines
+        call map(lstXML,'haxe#HaxePrepareList(v:val)') " Get rid of the xml in the other lines
         let lstComplete = [] " Initialize our completion list
         for item in lstXML " Create a dictionary for each line, and add them to a list
           let dicTmp={'word': item}
@@ -95,7 +95,7 @@ fun! haxe#GetCompletions(line, col, base)
       endif
     endif
     call filter(lstXML,'v:val !~ "list>"') " Get rid of the list tags
-    call map(lstXML,'HaxePrepareList(v:val)') " Get rid of the xml in the other lines
+    call map(lstXML,'haxe#HaxePrepareList(v:val)') " Get rid of the xml in the other lines
     let lstComplete = [] " Initialize our completion list
     for item in lstXML " Create a dictionary for each line, and add them to a list
       let element = split(item,"*")
@@ -166,3 +166,16 @@ fun! haxe#DefineLocalVar()
     return ''
   endif
 endf
+
+
+
+" This function gets rid of the XML tags in the completion list.
+" There must be a better way, but this works for now.
+fun! haxe#HaxePrepareList(v)
+    let text = substitute(a:v,"\<i n=\"","","")
+    let text = substitute(text,"\"\>\<t\>","*","")
+    let text = substitute(text,"\<[^>]*\>","","g")
+    let text = substitute(text,"\&gt\;",">","g")
+    let text = substitute(text,"\&lt\;","<","g")
+    return text
+endfun
