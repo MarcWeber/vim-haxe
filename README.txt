@@ -36,6 +36,10 @@ Note: On the haxe.org site there are syntax plugins as well.
 There are two so I have to think about which is the best way providing both?
 Maybe using a big fat if .. else endif ?
 
+
+NEW WAY:
+Use http://github.com/MarcWeber/vim-plugin-manager
+
 _______________________________________________
 USAGE (QUICK AND DIRTY)
 
