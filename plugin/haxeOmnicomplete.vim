@@ -44,6 +44,8 @@ if !exists('g:vim_haxe_no_filetype')
       \| setlocal errorformat=%f:%l:\ characters\ %\\d%\\+-%c\ %m
 
     autocmd BufRead,BufNewFile *.hxml setlocal filetype=haxe_hxml
+
+    autocmd Filetype qf noremap <buffer> i :call<space>haxe#FindImportFromQuickFix()<cr>
   augroup end
 endif
 

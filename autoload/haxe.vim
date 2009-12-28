@@ -1,14 +1,19 @@
 " functions will be loaded lazily when needed
+exec scriptmanager#DefineAndBind('s:c','g:vim_haxe', '{}')
+
+let s:c['f_as_files'] = get(s:c, 'f_as_files', funcref#Function('haxe#ASFiles'))
+let s:c['source_directories'] = get(s:c, 'source_directories', [])
+let s:c['flash_develop_checkout'] = get(s:c, 'flash_develop_checkout', '')
+let s:c['f_scan_as'] = get(s:c, 'f_scan_as', funcref#Function('flashlibdata#ScanASFile'))
 
 fun! haxe#LineTillCursor()
   return getline('.')[:col('.')-2]
 endf
 fun! haxe#CursorPositions()
-  let line_till_completion = substitute(haxe#LineTillCursor(),'[^. \t()]*$','','')
+  let line_till_completion = substitute(haxe#LineTillCursor(),'[^.: \t()]*$','','')
   let chars_in_line = strlen(line_till_completion)
 
   " haxePos: byte position 
-  " chars_in_line: col in line where completion starts. Example:
   "       name.foo() 
   "            ^ here
   return {'line' : line('.'), 'col': chars_in_line }
@@ -47,18 +52,10 @@ fun! haxe#GetCompletions(line, col, base)
   
   " silently write buffer
   silent! write
-  if exists('g:haxe_build_hxml')
-    let contents = join(readfile(g:haxe_build_hxml), " ")
-    " remove -main foo
-    let contents = substitute(contents, '-main\s*[^ ]*', '', 'g')
-    " remove target.swf
-    " let contents = substitute(contents, '[^ ]*\.swf', '', 'g')
-    let args_from_hxml = contents
-  else
-    let args_from_hxml = ""
-  endif
   " Construction of the base command line
-  let strCmd="haxe --no-output -main " . classname . " " . args_from_hxml. " --display " . '"' . tmpFilename . '"' . "@" . bytePos . " -cp " . '"' . expand("%:p:h") . '" -cp "'.tmpDir.'"'
+
+  let d = haxe#BuildHXML()
+  let strCmd="haxe --no-output -main " . classname . " " . d['ExtraCompletArgs']. " --display " . '"' . tmpFilename . '"' . "@" . bytePos . " -cp " . '"' . expand("%:p:h") . '" -cp "'.tmpDir.'"'
 
   try
     " We keep the results from the comand in a variable
@@ -109,18 +106,28 @@ fun! haxe#GetCompletions(line, col, base)
       endif
       call add(lstComplete,dicTmp)
     endfor
-    call filter(lstComplete,'v:val["word"] =~ '.string('^'.a:base))
-    " add ( if the completion is a function
-    return lstComplete " Finally, return the list with completions
-
   catch lstErrors
     let lstErrors = split(substitute(res, tmpFilename, expand('%'),'g'),"\n")
     call writefile(lstErrors,b:haxeErrorFile)
     execute "cgetfile ".b:haxeErrorFile
     " Errors will be available for view with the quickfix commands
     cope | wincmd p
-    return []
+    let lstComplete = []
   endtry
+
+  " add classes from packages
+  for file in funcref#Call(s:c['f_as_files'])
+    if file =~ '\.as$'
+      " parsing files can be slow (because vim regex is slow) so cache result
+      let scanned = cached_interpretation_of_file#ScanIfNewer(file,
+        \ {'scan_func' : s:c['f_scan_as'], 'fileCache':1})
+      if has_key(scanned,'class')
+        call add(lstComplete, {'word': scanned['class'], 'menu': 'class in '.get(scanned,'package','')})
+      endif
+    endif
+  endfor
+  call filter(lstComplete,'v:val["word"] =~ '.string('^'.a:base))
+  return lstComplete
 
 endf
 
@@ -168,7 +175,6 @@ fun! haxe#DefineLocalVar()
 endf
 
 
-
 " This function gets rid of the XML tags in the completion list.
 " There must be a better way, but this works for now.
 fun! haxe#HaxePrepareList(v)
@@ -179,3 +185,118 @@ fun! haxe#HaxePrepareList(v)
     let text = substitute(text,"\&lt\;","<","g")
     return text
 endfun
+
+fun! haxe#BuildHXMLPath()
+  if !exists('g:haxe_build_hxml')
+    let g:haxe_build_hxml=input('specify your build.hxml file. It should contain one haxe invokation only: ','','file')
+  endif
+  return g:haxe_build_hxml
+endf
+
+" extract flash version from build.hxml
+fun! haxe#ParseHXML(lines)
+  let d = {}
+
+  let contents = ""
+
+  let contents = join(a:lines, " ")
+  " remove -main foo
+  let contents = substitute(contents, '-main\s*[^ ]*', '', 'g')
+  " remove target.swf
+  " let contents = substitute(contents, '[^ ]*\.swf', '', 'g')
+  let args_from_hxml = contents
+
+  let d['ExtraCompletArgs'] = args_from_hxml
+
+  if contents =~ '-swf9'
+    let d['flash_target_version'] = 9
+  endif
+
+  let flashTargetVersion = matchstr(args_from_hxml, '\<-swf-version\s\+\([0-9.]\+\)')
+  if flashTargetVersion != ''
+    let d['flash_target_version'] = flashTargetVersion
+  endif
+
+  return d
+endf
+
+" cached version of current build.hxml file
+fun! haxe#BuildHXML()
+  return cached_interpretation_of_file#ScanIfNewer(
+    \ haxe#BuildHXMLPath(),
+    \ { 'scan_func' : funcref#Function('haxe#ParseHXML') } )
+endf
+
+" as files which are searched for imports etc
+" add custom directories to g:vim_haxe['source_directories']
+fun! haxe#ASFiles()
+  let files = []
+
+  let fdc = s:c['flash_develop_checkout']
+
+  if fdc != ''
+    let tv = get(haxe#BuildHXML(),'flash_target_version', -1)
+    if tv == 9
+      call extend(files, glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP9/**/*.as'))
+    elseif tv == 10
+      call extend(files, glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP10/**/*.as'))
+    endif
+  else
+    echoe "consider checking out flashdevelop and setting let g:vim_haxe['flash_develop_checkout'] = 'path_to_checkout'"
+  endif
+
+  for d in s:c['source_directories']
+    call extend(files, glob#Glob(d.'/**/*.as'))
+  endfor
+
+  let g:files = files
+  return files
+endf
+
+fun! haxe#FindImportFromQuickFix()
+  let class = matchstr(getline('.'), 'Class not found : \zs.*')
+
+  let solutions = []
+
+  " add classes from packages
+  for file in funcref#Call(s:c['f_as_files'])
+    if file =~ '\.as$'
+      " parsing files can be slow (because vim regex is slow) so cache result
+      let scanned = cached_interpretation_of_file#ScanIfNewer(file,
+        \ {'scan_func' : s:c['f_scan_as'], 'fileCache':1})
+      if has_key(scanned,'class') && scanned['class'] == class && has_key(scanned,'package')
+        call add(solutions,scanned['package'].'.'.class)
+      endif
+    endif
+  endfor
+  if empty(solutions)
+    echoe "not found: ".class
+    return
+  elseif len(solutions) > 1
+    let solution =
+     \ exists('g:tovl_feature_tags')
+     \ ? tovl#ui#choice#LetUserSelectIfThereIsAChoice('choose import', solutions)
+     \ : solutions[inputlist(solutions)]
+  else
+    let solution = solutions[0]
+  endif
+  exec "normal \<cr>G"
+
+  let line = search('^\s*import\s*'.solution,'cwb')
+  if line != 0
+    wincmd p
+    echo "class is imported at line :".line." - nothing to be done"
+    return
+  endif
+
+  if search('^import','cwb') == 0
+    " no import found, add above (first line)
+    let a = "ggO"
+  else
+    " one import found, add below
+    let a = "o"
+  endif
+  exec "normal ".a."import ".solution.";\<esc>"
+  wincmd p
+  cnext
+endf

@@ -17,28 +17,31 @@ returned. Simple, huh?
 _______________________________________________
 INSTALLATION
 
-get this distribution form http://github.com/MarcWeber/vim-haxe
+Install this plugin: http://github.com/MarcWeber/vim-plugin-manager
 
-Put this into your .vimrc:
+run once:
+call scriptmanager#Activate(["vim-haxe"])
 
-" this must be the very first line:
-set runtimepath+=PATH_TO_THIS_REPO
-filetype plugin on
-
-let g:haxe_build_hxml="build.hxml"
-
-and you should be done
+Then add to your .vimrc:
+call scriptmanager#Activate(["vim-haxe"])
 
 Use <c-x><c-o> to get completion
 Use <c-l> to define a local command
 
-Note: On the haxe.org site there are syntax plugins as well.
-There are two so I have to think about which is the best way providing both?
-Maybe using a big fat if .. else endif ?
+place cursor on error line in Quikfix Window then type i to add a missing flash
+import
 
+You should svn checkout http://flashdevelop.googlecode.com/svn/trunk
+and set in your .vimrc:
 
-NEW WAY:
-Use http://github.com/MarcWeber/vim-plugin-manager
+  let g:vim_haxe = {}
+  let g:vim_haxe['flash_develop_checkout'] = '~/path-to/flashdevelop_trunk'
+
+_______________________________________________
+CONFIGURATION:
+
+TODO, get a list of options by:
+grep -r  vim_haxe .
 
 _______________________________________________
 USAGE (QUICK AND DIRTY)
