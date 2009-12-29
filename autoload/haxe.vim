@@ -50,10 +50,7 @@ fun! haxe#GetCompletions(line, col, base)
   let tmpFilename = tmpDir.'/'.expand('%:t')
   call writefile(getline(1, a:line-1)+[getline('.')[:(a:col-1)]], tmpFilename)
   
-  " silently write buffer
-  silent! write
   " Construction of the base command line
-
   let d = haxe#BuildHXML()
   let strCmd="haxe --no-output -main " . classname . " " . d['ExtraCompletArgs']. " --display " . '"' . tmpFilename . '"' . "@" . bytePos . " -cp " . '"' . expand("%:p:h") . '" -cp "'.tmpDir.'"'
 
@@ -115,17 +112,20 @@ fun! haxe#GetCompletions(line, col, base)
     let lstComplete = []
   endtry
 
-  " add classes from packages
-  for file in funcref#Call(s:c['f_as_files'])
-    if file =~ '\.as$'
-      " parsing files can be slow (because vim regex is slow) so cache result
-      let scanned = cached_interpretation_of_file#ScanIfNewer(file,
-        \ {'scan_func' : s:c['f_scan_as'], 'fileCache':1})
-      if has_key(scanned,'class')
-        call add(lstComplete, {'word': scanned['class'], 'menu': 'class in '.get(scanned,'package','')})
+  if empty(lstComplete)
+    " add classes from packages
+    for file in funcref#Call(s:c['f_as_files'])
+      if file =~ '\.as$'
+        " parsing files can be slow (because vim regex is slow) so cache result
+        let scanned = cached_interpretation_of_file#ScanIfNewer(file,
+          \ {'scan_func' : s:c['f_scan_as'], 'fileCache':1})
+        if has_key(scanned,'class')
+          call add(lstComplete, {'word': scanned['class'], 'menu': 'class in '.get(scanned,'package','')})
+        endif
       endif
-    endif
-  endfor
+    endfor
+  endif
+
   call filter(lstComplete,'v:val["word"] =~ '.string('^'.a:base))
   return lstComplete
 
@@ -298,5 +298,5 @@ fun! haxe#FindImportFromQuickFix()
   endif
   exec "normal ".a."import ".solution.";\<esc>"
   wincmd p
-  cnext
+  silent! cnext
 endf
