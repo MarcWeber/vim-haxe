@@ -68,10 +68,9 @@ fun! haxe#GetCompletions(line, col, base)
 
     let lstXML = split(res,"\n") " We make a list with each line of the xml
 
-    if len(lstXML) == 0 " If there were no lines, then we return no matches
-      return []
-    endif
-    if lstXML[0] != '<list>' "If is not a class definition, we check for type definition
+    if len(lstXML) == 0
+      let lstComplete = []
+    elseif lstXML[0] != '<list>' "If is not a class definition, we check for type definition
       if lstXML[0] != '<type>' " If not a type definition then something went wrong... 
         if !exists("b:haxeErrorFile")
           let b:haxeErrorFile = tempname()
