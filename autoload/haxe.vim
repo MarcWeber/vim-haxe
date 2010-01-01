@@ -155,6 +155,7 @@ fun! haxe#DefineLocalVar()
   call filter(completions,'v:val["word"] =~ '.string('^'.base.'$'))
   if len(completions) == 1
     let item = completions[0]
+
     if has_key(item, 'menu')
       let type = substitute(completions[0]['menu'],'.\{-}\([^ ()]*\)$','\1','')
       let name = substitute(type,'<.*>','','g')
@@ -164,9 +165,22 @@ fun! haxe#DefineLocalVar()
       let name = base
     endif
     exec 'let name = '.(exists('g:vim_hax_local_name_expr') ? g:vim_hax_local_name_expr : 'tolower(name)')
+    let delVar = ""
+    let existing_var = matchlist(lineTC, 'var \([^.: \t]*\)\([^ \t]*\)\s*=\s*')
+    if empty(existing_var)
+      " this.foo -> var foo
+      let existing_var = matchlist(lineTC, 'this\.\([^.: \t]*\)\([^ \t]*\)\s*=\s*')
+    endif
+
+    if !empty(existing_var)
+      " remove existing var name:type .. =
+      let name = existing_var[1]
+      let delVar = repeat("\<del>", len(existing_var[0]))
+    endif
+
     let maybeSemicolon = line_pref =~ ';$' ? ';' : ''
     " TODO add suffix 1,2,.. if name is already in use!
-    return maybeSemicolon."\<esc>Ivar ".name.type." = \<esc>"
+    return maybeSemicolon."\<esc>Ivar ".name.type." = ".delVar."\<esc>"
   else
     echoe "1 completion expceted but got: ".len(completions)
     return ''
@@ -253,7 +267,7 @@ fun! haxe#ASFiles()
 endf
 
 fun! haxe#FindImportFromQuickFix()
-  let class = matchstr(getline('.'), 'Class not found : \zs.*')
+  let class = matchstr(getline('.'), 'Class not found : \zs.*\|Unknown identifier : \zs.*')
 
   let solutions = []
 
@@ -269,7 +283,7 @@ fun! haxe#FindImportFromQuickFix()
     endif
   endfor
   if empty(solutions)
-    echoe "not found: ".class
+    echoe "not found: '".class.'"'
     return
   elseif len(solutions) > 1
     let solution =
