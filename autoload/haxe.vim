@@ -270,6 +270,16 @@ fun! haxe#ASFiles()
   return files
 endf
 
+fun! haxe#ScannedFiles()
+  let list = []
+  for file in funcref#Call(s:c['f_as_files'])
+    let scanned = cached_interpretation_of_file#ScanIfNewer(file,
+      \ {'scan_func' : s:c['f_scan_as'], 'fileCache':1})
+    call add(list, {'file': file, 'scanned': scanned })
+  endfor
+  return list
+endfun
+
 fun! haxe#FindImportFromQuickFix()
   let class = matchstr(getline('.'), 'Class not found : \zs.*\|Unknown identifier : \zs.*')
 
@@ -290,7 +300,7 @@ fun! haxe#FindImportFromQuickFix()
     echoe "not found: '".class.'"'
     return
   elseif len(solutions) > 1
-    let solution = tlib#input#List(type, solutions)
+    let solution = tlib#input#List("s",'choose import', solutions)
   else
     let solution = solutions[0]
   endif
@@ -322,4 +332,44 @@ fun! haxe#AddCamelCaseNames(list)
       call add(a:list, tolower(upper))
     endif
   endfor
+endf
+
+" name is regex
+fun! haxe#ThingByRegex(name)
+  let list = []
+
+  for i in haxe#ScannedFiles()
+    let f = i['file']
+    let s = i['scanned']
+    if has_key(s,'package') && s['package'] =~ a:name
+      call add(list, {'what':s['package'].' :package', 'file':f})
+    endif
+    if has_key(s,'class') && s['class'] =~ a:name
+      call add(list, {'what':s['class'].' :class', 'line': s['class_line'], 'file':f})
+    endif
+    if has_key(s,'interface') && s['interface'] =~ a:name
+      call add(list, {'what':s['interface'].' :interface', 'line': s['class_line'], 'file':f})
+    endif
+    let functions = filter(copy(s['functions']), 'v:key =~'.string(a:name))
+    for [k,v] in items(functions)
+      call add(list, {'what':k.' :f ', 'line':v, 'file':f})
+    endfor
+    let consts = filter(copy(s['consts']),'v:key =~'.string(a:name))
+    for [k,v] in items(consts)
+      call add(list, {'what':k.' :const '.get(v,'type','-'), 'line':get(v,'line',0), 'file':f})
+    endfor
+  endfor
+
+  return list
+endf
+
+fun! haxe#GotoThingRegex(name)
+  let things = haxe#ThingByRegex(a:name)
+  let thing = tlib#input#List("i",'choose thing', map(copy(things),'v:val["what"]'))
+  if thing == ''
+    echoe "not found"
+    return
+  endif
+  let d = things[thing-1]
+  silent! exec 'sp '.d['file'].'|'.get(d,'line',0)
 endf

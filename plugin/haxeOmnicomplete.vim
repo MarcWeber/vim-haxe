@@ -49,3 +49,5 @@ if !exists('g:vim_haxe_no_filetype')
   augroup end
 endif
 
+command! -nargs=1 GotoThing :call haxe#GotoThingRegex('^'.<q-args>.'$')
+command! -nargs=1 GotoThingRegex :call haxe#GotoThingRegex(<f-args>)
