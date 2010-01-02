@@ -5,6 +5,7 @@ let s:c['f_as_files'] = get(s:c, 'f_as_files', funcref#Function('haxe#ASFiles'))
 let s:c['source_directories'] = get(s:c, 'source_directories', [])
 let s:c['flash_develop_checkout'] = get(s:c, 'flash_develop_checkout', '')
 let s:c['f_scan_as'] = get(s:c, 'f_scan_as', funcref#Function('flashlibdata#ScanASFile'))
+let s:c['local_name_expr'] = get(s:c, 'local_name_expr', 'tlib#input#List("s","select local name", names)')
 
 fun! haxe#LineTillCursor()
   return getline('.')[:col('.')-2]
@@ -155,16 +156,18 @@ fun! haxe#DefineLocalVar()
   call filter(completions,'v:val["word"] =~ '.string('^'.base.'$'))
   if len(completions) == 1
     let item = completions[0]
+    let maybeSemicolon = line_pref =~ '$' ? ';' : ';'
+
+    let names = [base]
+    let type = ''
 
     if has_key(item, 'menu')
       let type = substitute(completions[0]['menu'],'.\{-}\([^ ()]*\)$','\1','')
-      let name = substitute(type,'<.*>','','g')
+      call add(names, substitute(type,'\%(\..*\)\?\%(<.*>\)\?','','g'))
       let type = ':'.type
-    else
-      let type = ''
-      let name = base
     endif
-    exec 'let name = '.(exists('g:vim_hax_local_name_expr') ? g:vim_hax_local_name_expr : 'tolower(name)')
+    call haxe#AddCamelCaseNames(names)
+
     let delVar = ""
     let existing_var = matchlist(lineTC, 'var \([^.: \t]*\)\([^ \t]*\)\s*=\s*')
     if empty(existing_var)
@@ -176,9 +179,10 @@ fun! haxe#DefineLocalVar()
       " remove existing var name:type .. =
       let name = existing_var[1]
       let delVar = repeat("\<del>", len(existing_var[0]))
+    else
+      exec 'let name = '.s:c['local_name_expr']
     endif
 
-    let maybeSemicolon = line_pref =~ ';$' ? ';' : ''
     " TODO add suffix 1,2,.. if name is already in use!
     return maybeSemicolon."\<esc>Ivar ".name.type." = ".delVar."\<esc>"
   else
@@ -278,7 +282,7 @@ fun! haxe#FindImportFromQuickFix()
       let scanned = cached_interpretation_of_file#ScanIfNewer(file,
         \ {'scan_func' : s:c['f_scan_as'], 'fileCache':1})
       if has_key(scanned,'class') && scanned['class'] == class && has_key(scanned,'package')
-        call add(solutions,scanned['package'].'.'.class)
+        call add(solutions, scanned['package'].'.'.class)
       endif
     endif
   endfor
@@ -286,10 +290,7 @@ fun! haxe#FindImportFromQuickFix()
     echoe "not found: '".class.'"'
     return
   elseif len(solutions) > 1
-    let solution =
-     \ exists('g:tovl_feature_tags')
-     \ ? tovl#ui#choice#LetUserSelectIfThereIsAChoice('choose import', solutions)
-     \ : solutions[inputlist(solutions)]
+    let solution = tlib#input#List(type, solutions)
   else
     let solution = solutions[0]
   endif
@@ -312,4 +313,13 @@ fun! haxe#FindImportFromQuickFix()
   exec "normal ".a."import ".solution.";\<esc>"
   wincmd p
   silent! cnext
+endf
+
+fun! haxe#AddCamelCaseNames(list)
+  for i in copy(a:list)
+    let upper = substitute(i,'\U','','g')
+    if len(upper) > 2
+      call add(a:list, tolower(upper))
+    endif
+  endfor
 endf
