@@ -35,8 +35,6 @@ endf
 "
 " base: prefix used to filter results
 fun! haxe#GetCompletions(line, col, base)
-  let bytePos = string(line2byte(a:line) + a:col -1)
-
   " Start constructing the command for haxe
   " The classname will be based on the current filename
   " On both the classname and the filename we make sure
@@ -49,7 +47,15 @@ fun! haxe#GetCompletions(line, col, base)
   " Thus truncate the file at the location where completion starts
   " This also means that error locations must be rewritten
   let tmpFilename = tmpDir.'/'.expand('%:t')
-  call writefile(getline(1, a:line-1)+[getline('.')[:(a:col-1)]], tmpFilename)
+
+  let linesTillC = getline(1, a:line-1)+[getline('.')[:(a:col-1)]]
+  " hacky: remove package name. This way the file doesn't have to be put into
+  " subdirectories
+  let lines = map(linesTillC, 'v:val =~ '.string('^package\s\+').' ? "" : v:val')
+  call writefile( lines
+        \ , tmpFilename)
+
+  let bytePos = len(join(lines,"\n"))
   
   " Construction of the base command line
   let d = haxe#BuildHXML()
@@ -59,7 +65,7 @@ fun! haxe#GetCompletions(line, col, base)
     " We keep the results from the comand in a variable
     let g:strCmd = strCmd
     let res=system(strCmd)
-    call delete(tmpFilename)
+    "call delete(tmpFilename)
     if v:shell_error != 0 "If there was an error calling haxe, we return no matches and inform the user
       if !exists("b:haxeErrorFile")
         let b:haxeErrorFile = tempname()
