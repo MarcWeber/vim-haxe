@@ -348,7 +348,7 @@ fun! haxe#ThingByRegex(name)
       call add(list, {'what':s['class'].' :class', 'line': s['class_line'], 'file':f})
     endif
     if has_key(s,'interface') && s['interface'] =~ a:name
-      call add(list, {'what':s['interface'].' :interface', 'line': s['class_line'], 'file':f})
+      call add(list, {'what':s['interface'].' :interface', 'line': s['interface_line'], 'file':f})
     endif
     let functions = filter(copy(s['functions']), 'v:key =~'.string(a:name))
     for [k,v] in items(functions)

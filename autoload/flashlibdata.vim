@@ -12,25 +12,6 @@ fun! flashlibdata#ASSources()
   endif
 endf
 
-fun! flashlibdata#CreateData(path_to_flashdevelop_checkout)
-  let dirs=split(glob(a:path_to_flashdevelop_checkout.'/FD3/FlashDevelop/Bin/Debug/Library/*/*'),"\n")
-  let dict = {}
-
-  for dir in dirs
-    let sdict = {}
-    for f in split(glob(dir.'/**/*.as'),"\n")
-      if f ~= '\.svn'
-        continue
-      endif
-      echo "parsing file ".f
-      let contents = readfile(f)
-      let package = filter(clone(contents),'v:val =~'.string('
-    endfor
-  endfor
-  call writefile([string(dict)], flashlibdata#DataFile())
-  let g:vim_haxe_flashlib_data = dict
-endf
-
 fun! flashlibdata#FlashLibVersion()
   if !exists('g:vim_haxe_flash_lib_version')
     " TODO improve this!
@@ -71,6 +52,7 @@ fun! flashlibdata#ScanASFile(file_lines)
     if !empty(m)
       if m[1] == 'interface'
         let d['interface'] = m[2]
+        let d['interface_line'] = nr
       elseif m[3] == 'class'
         let d['class'] = m[4]
         let d['class_line'] = nr
