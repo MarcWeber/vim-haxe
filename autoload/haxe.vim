@@ -235,7 +235,7 @@ fun! haxe#ParseHXML(lines)
     let d['flash_target_version'] = 9
   endif
 
-  let flashTargetVersion = matchstr(args_from_hxml, '\<-swf-version\s\+\([0-9.]\+\)')
+  let flashTargetVersion = matchstr(args_from_hxml, '-swf-version\s\+\zs[0-9.]\+\ze')
   if flashTargetVersion != ''
     let d['flash_target_version'] = flashTargetVersion
   endif
