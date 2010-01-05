@@ -341,29 +341,36 @@ fun! haxe#AddCamelCaseNames(list)
 endf
 
 " name is regex
-fun! haxe#ThingByRegex(name)
+" optional arg: "function\|interface\|class" list functions, classes and interfaces only
+fun! haxe#ThingByRegex(name, ...)
+  let type = a:0 > 0 ? a:1 : ""
+
   let list = []
 
   for i in haxe#ScannedFiles()
     let f = i['file']
     let s = i['scanned']
-    if has_key(s,'package') && s['package'] =~ a:name
-      call add(list, {'what':s['package'].' :package', 'file':f})
+    if ("package" =~ type) && has_key(s,'package') && s['package'] =~ a:name
+      call add(list, {'d': i, 'what':s['package'].' :package', 'file':f})
     endif
-    if has_key(s,'class') && s['class'] =~ a:name
-      call add(list, {'what':s['class'].' :class', 'line': s['class_line'], 'file':f})
+    if ("class" =~ type) && has_key(s,'class') && s['class'] =~ a:name
+      call add(list, {'d': i, 'what':s['class'].' :class', 'line': s['class_line'], 'file':f})
     endif
-    if has_key(s,'interface') && s['interface'] =~ a:name
-      call add(list, {'what':s['interface'].' :interface', 'line': s['interface_line'], 'file':f})
+    if ("interface" =~ type) && has_key(s,'interface') && s['interface'] =~ a:name
+      call add(list, {'d': i, 'what':s['interface'].' :interface', 'line': s['interface_line'], 'file':f})
     endif
     let functions = filter(copy(s['functions']), 'v:key =~'.string(a:name))
-    for [k,v] in items(functions)
-      call add(list, {'what':k.' :f ', 'line':v, 'file':f})
-    endfor
-    let consts = filter(copy(s['consts']),'v:key =~'.string(a:name))
-    for [k,v] in items(consts)
-      call add(list, {'what':k.' :const '.get(v,'type','-'), 'line':get(v,'line',0), 'file':f})
-    endfor
+    if ("function" =~ type)
+      for [k,v] in items(functions)
+        call add(list, {'d': i, 'what':k.' :f ', 'line':v, 'file':f})
+      endfor
+    endif
+    if ("consts" =~ type)
+      let consts = filter(copy(s['consts']),'v:key =~'.string(a:name))
+      for [k,v] in items(consts)
+        call add(list, {'d': i, 'what':k.' :const '.get(v,'type','-'), 'line':get(v,'line',0), 'file':f})
+      endfor
+    endif
   endfor
 
   return list
@@ -378,4 +385,19 @@ fun! haxe#GotoThingRegex(name)
   endif
   let d = things[thing-1]
   silent! exec 'sp '.d['file'].'|'.get(d,'line',0)
+endf
+
+fun! haxe#ParentsOfObject(object)
+  let object = a:object
+  let hirarchy = []
+  while 1
+    let items = haxe#ThingByRegex('^'.object.'$', 'class')
+    if empty(items) | break | endif
+    if len(items) > 1 | echoe "using first match for ".object | endif
+    let match = items[0]
+    call add(hirarchy, object)
+    let object = get(match['d']['scanned'],'class_extends',"-")
+    if object == "-" | break | endif
+  endwhile
+  return hirarchy
 endf

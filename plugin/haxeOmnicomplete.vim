@@ -51,3 +51,4 @@ endif
 
 command! -nargs=1 GotoThing :call haxe#GotoThingRegex('^'.<q-args>.'$')
 command! -nargs=1 GotoThingRegex :call haxe#GotoThingRegex(<f-args>)
+command! -nargs=1 ParentsOfObject :echo join(haxe#ParentsOfObject(<f-args>)," > ")
