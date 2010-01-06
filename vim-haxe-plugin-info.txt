@@ -1,12 +1,14 @@
 {
-  'name' : 'vim-haxe',
-  'version' : "0.1",
-  'author' : "Marc Weber <marco-oweber@gmx.de>",
-  'maintainer' : "Marc Weber <marco-oweber@gmx.de>",
-  'repository' : {'type': 'git', 'url': 'git://github.com/MarcWeber/vim-haxe.git'},
-  'dependencies' : {
-    'vim-plugin-mw-utils': {},
-    'tlib': {},
+  "name" : "vim-haxe",
+  "version" : "0.1",
+  "author" : "Marc Weber <marco-oweber@gmx.de>",
+  "maintainer" : "Marc Weber <marco-oweber@gmx.de>",
+  "repository" : {"type": "git", "url": "git://github.com/MarcWeber/vim-haxe.git"},
+  "dependencies" : {
+    "vim-plugin-mw-utils": {},
+    "tlib": {},
+    "vim-plugin-views": {},
+    "vim-plugin-goto-thing-at-cursor": {},
   },
-  'description' : 'haxe completion for Vim'
+  "description" : "haxe completion for Vim"
 }

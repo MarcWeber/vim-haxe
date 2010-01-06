@@ -21,3 +21,5 @@ if !exists('g:vim_haxe_no_mappings')
   setlocal completeopt=preview,menu,menuone
   setlocal omnifunc=haxe#Complete
 endif
+
+call on_thing_handler#AddOnThingHandler('b', funcref#Function('haxe#gfHandler'))

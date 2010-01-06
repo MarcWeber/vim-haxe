@@ -387,17 +387,45 @@ fun! haxe#GotoThingRegex(name)
   silent! exec 'sp '.d['file'].'|'.get(d,'line',0)
 endf
 
-fun! haxe#ParentsOfObject(object)
+fun! haxe#ClassInfo(object)
   let object = a:object
   let hirarchy = []
+  let childs = []
   while 1
     let items = haxe#ThingByRegex('^'.object.'$', 'class')
     if empty(items) | break | endif
     if len(items) > 1 | echoe "using first match for ".object | endif
     let match = items[0]
+    if !exists('d')
+      let d = match
+    endif
     call add(hirarchy, object)
     let object = get(match['d']['scanned'],'class_extends',"-")
     if object == "-" | break | endif
   endwhile
-  return hirarchy
+
+  for d in haxe#ScannedFiles()
+    if get(d['scanned'],'class_extends','') == a:object
+      call add(childs, d['scanned']['class'])
+    endif
+  endfor
+  return { 'hirarchy' : hirarchy, 'childs' : childs, 'd': d}
+endf
+
+fun! haxe#ClassView(class)
+  let info = haxe#ClassInfo(a:class)
+  let lines = []
+  call add(lines, "parents: ". join(info["hirarchy"]," > "))
+  call add(lines, "childs: ". join(info["childs"], " , "))
+  return join(lines,"\n")
+endf
+
+fun! haxe#gfHandler()
+  let r = []
+  let class = expand("<cword>")
+  for d in haxe#ThingByRegex('^'.class.'$')
+    call add(r, {'filename': d['file'], 'break': 1, 'line_nr': get(d,'line',0), 'info': d['what'] })
+    call add(r, {'filename': views#View('fun',['haxe#ClassView',class], 1), 'break': 1})
+  endfor
+  return r
 endf
