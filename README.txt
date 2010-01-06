@@ -17,7 +17,7 @@ returned. Simple, huh?
 _______________________________________________
 INSTALLATION
 
-Install this plugin: http://github.com/MarcWeber/vim-plugin-manager
+Install this plugin: http://github.com/MarcWeber/vim-addon-manager
 
 run once:
 call scriptmanager#Activate(["vim-haxe"])

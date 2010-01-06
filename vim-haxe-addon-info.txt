@@ -5,10 +5,10 @@
   "maintainer" : "Marc Weber <marco-oweber@gmx.de>",
   "repository" : {"type": "git", "url": "git://github.com/MarcWeber/vim-haxe.git"},
   "dependencies" : {
-    "vim-plugin-mw-utils": {},
+    "vim-addon-mw-utils": {},
     "tlib": {},
-    "vim-plugin-views": {},
-    "vim-plugin-goto-thing-at-cursor": {},
+    "vim-addon-views": {},
+    "vim-addon-goto-thing-at-cursor": {},
   },
   "description" : "haxe completion for Vim"
 }
