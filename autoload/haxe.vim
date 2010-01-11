@@ -300,7 +300,9 @@ fun! haxe#FindImportFromQuickFix()
       " parsing files can be slow (because vim regex is slow) so cache result
       let scanned = cached_file_contents#CachedFileContents(file,
         \ s:c['f_scan_as'], {'fileCache':1})
-      if has_key(scanned,'class') && scanned['class'] == class && has_key(scanned,'package')
+      if (  (has_key(scanned,'class') && scanned['class'] == class)
+        \  || (has_key(scanned,'interface') && scanned['interface'] == class)
+        \ ) && has_key(scanned,'package')
         call add(solutions, scanned['package'].'.'.class)
       endif
     endif
