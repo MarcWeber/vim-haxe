@@ -5,6 +5,7 @@ let s:c['f_as_files'] = get(s:c, 'f_as_files', funcref#Function('haxe#ASFiles'))
 let s:c['source_directories'] = get(s:c, 'source_directories', [])
 let s:c['flash_develop_checkout'] = get(s:c, 'flash_develop_checkout', '')
 let s:c['local_name_expr'] = get(s:c, 'local_name_expr', 'tlib#input#List("s","select local name", names)')
+let s:c['browser'] = get(s:c, 'browser', 'Browse %URL%')
 
 fun! haxe#LineTillCursor()
   return getline('.')[:col('.')-2]
@@ -365,12 +366,14 @@ fun! haxe#ThingByRegex(name, ...)
     if ("function" =~ type)
       for [k,v] in items(functions)
         call add(list, {'d': i, 'what':k.' :f ', 'line':v, 'file':f})
+        unlet k | unlet v
       endfor
     endif
     if ("consts" =~ type)
       let consts = filter(copy(s['consts']),'v:key =~'.string(a:name))
       for [k,v] in items(consts)
         call add(list, {'d': i, 'what':k.' :const '.get(v,'type','-'), 'line':get(v,'line',0), 'file':f})
+        unlet k | unlet v
       endfor
     endif
   endfor
@@ -429,6 +432,8 @@ fun! haxe#gfHandler()
     call add(r, {'filename': d['file'], 'break': 1, 'line_nr': get(d,'line',0), 'info': d['what'] })
     call add(r, {'filename': views#View('fun',['haxe#ClassView',class], 1), 'break': 1})
   endfor
+  for f in split(glob(haxe#FlexDocsDir().'/**/'.class.'.html'),"\n")
+    call add(r, {'exec': substitute(s:c['browser'],'%URL%',f,'') , 'break': 1, 'info': 'flex docs '.f})
   return r
 endf
 
@@ -505,4 +510,12 @@ fun! haxe#ScanASFile(file_lines)
   endwhile
 
   return d
+endf
+
+fun! haxe#FlexDocsDir()
+  if has_key(s:c,'flex_docs')
+    return s:c['flex_docs']
+  else
+    echoe 'download and unzip endif http://livedocs.adobe.com/flex/3/flex3_documentation.zip. let g:vim_haxe["flex_docs"]="path"'
+  endif
 endf
