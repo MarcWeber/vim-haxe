@@ -45,6 +45,8 @@ if !exists('g:vim_haxe_no_filetype')
 
     autocmd BufRead,BufNewFile *.hxml setlocal filetype=haxe_hxml
 
+    autocmd Filetype qf noremap <buffer> i :call<space>haxe#FindImportFromQuickFix()<cr>
+
     " This is executed multiple times - don't know how to fix it
     " AddOnThingHandler contains Uniq(..)
     autocmd BufRead,BufEnter vim_view_fun://['haxe#ClassView* call on_thing_handler#AddOnThingHandler('b',funcref#Function('haxe#gfHandler'))
