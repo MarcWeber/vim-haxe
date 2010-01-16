@@ -263,16 +263,17 @@ fun! haxe#ASFiles()
   if fdc != ''
     let tv = get(haxe#BuildHXML(),'flash_target_version', -1)
     if tv == 9
-      call extend(files, glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP9/**/*.as'))
+      call extend(files, glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP9/**/*.as', {'cachable':1}))
     elseif tv == 10
-      call extend(files, glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP10/**/*.as'))
+      call extend(files, glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP10/**/*.as', {'cachable':1}))
     endif
   else
     echoe "consider checking out flashdevelop and setting let g:vim_haxe['flash_develop_checkout'] = 'path_to_checkout'"
   endif
 
   for d in s:c['source_directories']
-    call extend(files, glob#Glob(d.'/**/*.as'))
+    call extend(files, glob#Glob(d.'/**/*.as', {'cachable':1}))
+    call extend(files, glob#Glob(d.'/**/*.hx', {'cachable':1}))
   endfor
 
   let g:files = files
