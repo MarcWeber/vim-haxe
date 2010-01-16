@@ -473,7 +473,7 @@ fun! haxe#ScanASFile(file_lines)
 
   let regex = join([
     \ '\(interface\)\s\+\([^ ]*\)',
-    \ '\(class\)\s\+\([^ ]*\)\s\+\%(extends\s\+\([^ ]*\)\)',
+    \ '\(class\)\s\+\([^ ]*\)\s\+\%(extends\s\+\([^ ]*\)\)\?',
     \ '^\(package\)\s\+\([^\n\r ]*\)',
     \ '\(function\)\s\+\([^\n\r ]*\)'
     \ ], '\|')
