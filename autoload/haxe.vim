@@ -120,15 +120,17 @@ fun! haxe#GetCompletions(line, col, base)
 
   if empty(lstComplete)
     " add classes from packages
-    for file in funcref#Call(s:c['f_as_files'])
-      if file =~ '\.as$'
-        " parsing files can be slow (because vim regex is slow) so cache result
-        let scanned = cached_file_contents#CachedFileContents(file,
-          \ s:c['f_scan_as'], {'fileCache':1})
-        if has_key(scanned,'class')
-          call add(lstComplete, {'word': scanned['class'], 'menu': 'class in '.get(scanned,'package','')})
+    for d in funcref#Call(s:c['f_as_files'])
+      for file in d['files']
+        if file =~ '\.as$'
+          " parsing files can be slow (because vim regex is slow) so cache result
+          let scanned = cached_file_contents#CachedFileContents(file,
+            \ s:c['f_scan_as'], d['cachable'])
+          if has_key(scanned,'class')
+            call add(lstComplete, {'word': scanned['class'], 'menu': 'class in '.get(scanned,'package','')})
+          endif
         endif
-      endif
+      endfor
     endfor
   endif
 
@@ -219,13 +221,10 @@ endf
 
 
 " extract flash version from build.hxml
-let s:c['f_scan_hxml'] = get(s:c, 'f_scan_hxml', {'func': funcref#Function('haxe#ParseHXML'), 'version' : 1} )
-fun! haxe#ParseHXML(lines)
+let s:c['f_scan_hxml'] = get(s:c, 'f_scan_hxml', {'func': funcref#Function('haxe#ParseHXML'), 'version' : 3} )
+fun! haxe#ParseHXML(filename)
   let d = {}
-
-  let contents = ""
-
-  let contents = join(a:lines, " ")
+  let contents = join(readfile(a:filename), " ")
   " remove -main foo
   let contents = substitute(contents, '-main\s*[^ ]*', '', 'g')
   " remove target.swf
@@ -255,6 +254,7 @@ endf
 
 " as files which are searched for imports etc
 " add custom directories to g:vim_haxe['source_directories']
+" returns [ { 'dir' : 'directory', 'cachable' : 0 /1 } ]
 fun! haxe#ASFiles()
   let files = []
 
@@ -263,29 +263,30 @@ fun! haxe#ASFiles()
   if fdc != ''
     let tv = get(haxe#BuildHXML(),'flash_target_version', -1)
     if tv == 9
-      call extend(files, glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP9/**/*.as', {'cachable':1}))
+      call add(files, { 'cachable': 1, 'files': glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP9/**/*.as', {'cachable':1})})
     elseif tv == 10
-      call extend(files, glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP10/**/*.as', {'cachable':1}))
+      call add(files, { 'cachable': 1, 'files': glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP10/**/*.as', {'cachable':1})})
     endif
   else
     echoe "consider checking out flashdevelop and setting let g:vim_haxe['flash_develop_checkout'] = 'path_to_checkout'"
   endif
 
   for d in s:c['source_directories']
-    call extend(files, glob#Glob(d.'/**/*.as', {'cachable':1}))
-    call extend(files, glob#Glob(d.'/**/*.hx', {'cachable':1}))
+    call add(files, { 'cachable' : get(d, 'cachable', 0), 'files': glob#Glob(d['dir'].'/**/*.as', {'cachable':1})})
+    call add(files, { 'cachable' : get(d, 'cachable', 0), 'files': glob#Glob(d['dir'].'/**/*.hx', {'cachable':1})})
   endfor
 
-  let g:files = files
   return files
 endf
 
 fun! haxe#ScannedFiles()
   let list = []
-  for file in funcref#Call(s:c['f_as_files'])
-    let scanned = cached_file_contents#CachedFileContents(file, s:c['f_scan_as'], 
-      \ {'fileCache':1})
-    call add(list, {'file': file, 'scanned': scanned })
+  for d in funcref#Call(s:c['f_as_files'])
+    for file in d['files']
+      let scanned = cached_file_contents#CachedFileContents(file, s:c['f_scan_as'], 
+        \ d['cachable'])
+      call add(list, {'file': file, 'scanned': scanned })
+    endfor
   endfor
   return list
 endfun
@@ -296,17 +297,19 @@ fun! haxe#FindImportFromQuickFix()
   let solutions = []
 
   " add classes from packages
-  for file in funcref#Call(s:c['f_as_files'])
-    if file =~ '\.as$'
-      " parsing files can be slow (because vim regex is slow) so cache result
-      let scanned = cached_file_contents#CachedFileContents(file,
-        \ s:c['f_scan_as'], {'fileCache':1})
-      if (  (has_key(scanned,'class') && scanned['class'] == class)
-        \  || (has_key(scanned,'interface') && scanned['interface'] == class)
-        \ ) && has_key(scanned,'package')
-        call add(solutions, scanned['package'].'.'.class)
+  for d in funcref#Call(s:c['f_as_files'])
+    for file in d['files']
+      if file =~ '\.as$'
+        " parsing files can be slow (because vim regex is slow) so cache result
+        let scanned = cached_file_contents#CachedFileContents(file,
+          \ s:c['f_scan_as'], d['cachable'])
+        if (  (has_key(scanned,'class') && scanned['class'] == class)
+          \  || (has_key(scanned,'interface') && scanned['interface'] == class)
+          \ ) && has_key(scanned,'package')
+          call add(solutions, scanned['package'].'.'.class)
+        endif
       endif
-    endif
+    endfor
   endfor
   if empty(solutions)
     echoe "not found: '".class.'"'
@@ -353,30 +356,39 @@ fun! haxe#ThingByRegex(name, ...)
 
   let list = []
 
+  let findPackage = "package" =~ type
+  let findClass = "class" =~ type
+  let findInterface = "interface" =~ type
+  let findFunctions = "function" =~ type
+  let findConsts = "consts" =~ type
+  let matchvval = 'v:val =~'.string(a:name)
+  let is_regex = a:name =~ '[*\.]'
+
   for i in haxe#ScannedFiles()
     let f = i['file']
     let s = i['scanned']
-    if ("package" =~ type) && has_key(s,'package') && s['package'] =~ a:name
+    if findPackage && has_key(s,'package') && s['package'] =~ a:name
       call add(list, {'d': i, 'what':s['package'].' :package', 'file':f})
     endif
-    if ("class" =~ type) && has_key(s,'class') && s['class'] =~ a:name
+    if findClass && has_key(s,'class') && s['class'] =~ a:name
       call add(list, {'d': i, 'what':s['class'].' :class', 'line': s['class_line'], 'file':f})
     endif
-    if ("interface" =~ type) && has_key(s,'interface') && s['interface'] =~ a:name
+    if findInterface && has_key(s,'interface') && s['interface'] =~ a:name
       call add(list, {'d': i, 'what':s['interface'].' :interface', 'line': s['interface_line'], 'file':f})
     endif
-    let functions = filter(copy(s['functions']), 'v:key =~'.string(a:name))
-    if ("function" =~ type)
-      for [k,v] in items(functions)
+    if findFunctions
+      let functions = s['functions']
+      for k in filter(keys(functions),matchvval)
+        let v = functions[k]
         call add(list, {'d': i, 'what':k.' :f ', 'line':v, 'file':f})
-        unlet k | unlet v
       endfor
     endif
-    if ("consts" =~ type)
-      let consts = filter(copy(s['consts']),'v:key =~'.string(a:name))
-      for [k,v] in items(consts)
+    if findConsts
+      let consts = s['consts']
+      for k in filter(keys(consts), matchvval)
+        if k !~ a:name | continue | endif
+        let v = consts[k]
         call add(list, {'d': i, 'what':k.' :const '.get(v,'type','-'), 'line':get(v,'line',0), 'file':f})
-        unlet k | unlet v
       endfor
     endif
   endfor
@@ -384,8 +396,52 @@ fun! haxe#ThingByRegex(name, ...)
   return list
 endf
 
+" duplicating code for performance reason :-(
+fun! haxe#ThingByString(name, ...)
+  let type = a:0 > 0 ? a:1 : ""
+
+  let list = []
+
+  let findPackage = "package" =~ type
+  let findClass = "class" =~ type
+  let findInterface = "interface" =~ type
+  let findFunctions = "function" =~ type
+  let findConsts = "consts" =~ type
+  let matchvval = 'v:val =='.string(a:name)
+
+  let has_fun =  "s['functions'][".string(a:name)."]"
+  let has_const = "s['consts'][".string(a:name)."]"
+
+  for i in haxe#ScannedFiles()
+    let s = i['scanned']
+    if findPackage && has_key(s,'package') && s['package'] == a:name
+      call add(list, {'d': i, 'what':s['package'].' :package', 'file':i['file']})
+    endif
+    if findClass && has_key(s,'class') && s['class'] == a:name
+      call add(list, {'d': i, 'what':s['class'].' :class', 'line': s['class_line'], 'file':i['file']})
+    endif
+    if findInterface && has_key(s,'interface') && s['interface'] == a:name
+      call add(list, {'d': i, 'what':s['interface'].' :interface', 'line': s['interface_line'], 'file':i['file']})
+    endif
+    if findFunctions
+      if exists(has_fun)
+        let v = s['functions'][a:name]
+        call add(list, {'d': i, 'what':a:name.' :f ', 'line':v, 'file':i['file']})
+      endif
+    endif
+    if findConsts
+      if exists(has_const)
+        let v = s['consts'][a:name]
+        call add(list, {'d': i, 'what':a:name.' :const '.get(v,'type','-'), 'line':get(v,'line',0), 'file':i['file']})
+      endif
+    endif
+  endfor
+
+  return list
+endf
+
 fun! haxe#GotoThingRegex(name)
-  let things = haxe#ThingByRegex(a:name)
+  let things = haxe#ThingByString(a:name)
   let thing = tlib#input#List("i",'choose thing', map(copy(things),'v:val["what"]'))
   if thing == ''
     echoe "not found"
@@ -431,12 +487,16 @@ endf
 fun! haxe#gfHandler()
   let r = []
   let class = expand("<cword>")
-  for d in haxe#ThingByRegex('^'.class.'$')
+  for d in haxe#ThingByString(class)
     call add(r, {'filename': d['file'], 'break': 1, 'line_nr': get(d,'line',0), 'info': d['what'] })
     call add(r, {'filename': views#View('fun',['haxe#ClassView',class], 1), 'break': 1})
   endfor
-  for f in split(glob(haxe#FlexDocsDir().'/**/'.class.'.html'),"\n")
-    call add(r, {'exec': substitute(s:c['browser'],'%URL%',f,'') , 'break': 1, 'info': 'flex docs '.f})
+  let fdd = haxe#FlexDocsDir().'/**/'.class.'.html'
+  if fdd
+    for f in split(glob(),"\n")
+      call add(r, {'exec': substitute(s:c['browser'],'%URL%',f,'') , 'break': 1, 'info': 'flex docs '.f})
+    endfor
+  endif
   return r
 endf
 
@@ -462,11 +522,13 @@ endf
 let s:classregex='interface\s\+'
 let s:packageregex='^package\s\+\([^\n\r ]*\)'
 
-let s:c['f_scan_as'] = get(s:c, 'f_scan_as', {'func': funcref#Function('haxe#ScanASFile'), 'version' : 1} )
+let s:c['f_scan_as'] = get(s:c, 'f_scan_as', {'func': funcref#Function('haxe#ScanASFile'), 'version' : 1, 'use_file_cache' : 1} )
 " very simple .as / .hx 'parser'
 " It only stores function names, class names and the line numbers where those
 " functions occur. This way it can be used as tag replacement
-fun! haxe#ScanASFile(file_lines)
+fun! haxe#ScanASFile(filename)
+  let file_lines = readfile(a:filename)
+
   let d = {
         \ 'functions' : {},
         \ 'consts' : {}
@@ -484,8 +546,8 @@ fun! haxe#ScanASFile(file_lines)
   let g:r = regex
 
   let nr = 1
-  while nr < len(a:file_lines)
-    let l = a:file_lines[nr-1]
+  while nr < len(file_lines)
+    let l = file_lines[nr-1]
     let m = matchlist(l, regex)
     if !empty(m)
       if m[1] == 'interface'
@@ -498,7 +560,9 @@ fun! haxe#ScanASFile(file_lines)
       elseif m[6] == 'package'
         let d['package'] = m[7]
       elseif m[8] == 'function'
-        let d['functions'][m[9]] = nr
+        if m[9] != ''
+          let d['functions'][m[9]] = nr
+        endif
       else
         echoe "unkown match :".string(m)
       endif
@@ -519,6 +583,6 @@ fun! haxe#FlexDocsDir()
   if has_key(s:c,'flex_docs')
     return s:c['flex_docs']
   else
-    echoe 'download and unzip endif http://livedocs.adobe.com/flex/3/flex3_documentation.zip. let g:vim_haxe["flex_docs"]="path"'
+    return 0
   endif
 endf
