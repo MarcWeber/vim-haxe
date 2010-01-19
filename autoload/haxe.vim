@@ -586,3 +586,11 @@ fun! haxe#FlexDocsDir()
     return 0
   endif
 endf
+
+fun! haxe#CompileRHS()
+  let ef= 
+        \  '%f:%l:\ characters\ %c-%*[^\ ]\ %m,'
+        \ .'%f:%l:\ %m'
+
+  return "call bg#RunQF(['haxe',".string(haxe#BuildHXMLPath())."], 'c', ".string(ef).")"
+endfun

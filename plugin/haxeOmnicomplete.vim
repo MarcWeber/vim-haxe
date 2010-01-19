@@ -38,7 +38,7 @@ if !exists('g:vim_haxe_no_filetype')
   " Declaring errorformat to parse the errors that we may encounter during autocomplete.
   " Check for the global variables on load or new haxe file
   augroup Haxe
-    autocmd BufRead,BufNewFile *.m,*.hx setlocal filetype=haxe
+    autocmd BufRead,BufNewFile *.m,*.hx,*.as setlocal filetype=haxe
       \| nnoremap <silent> <buffer> <LocalLeader>p :call HaxeAddClasspath()<Cr>
       \| nnoremap <silent> <buffer> <LocalLeader>l :call HaxeAddLib()<Cr>
       \| setlocal errorformat=%f:%l:\ characters\ %\\d%\\+-%c\ %m
@@ -56,3 +56,6 @@ endif
 command! -nargs=1 GotoThing :call haxe#GotoThingRegex('^'.<q-args>.'$')
 command! -nargs=1 GotoThingRegex :call haxe#GotoThingRegex(<f-args>)
 command! -nargs=1 ParentsOfObject :echo join(haxe#ClassInfo(<f-args>)["hirarchy"]," > ")
+command! -nargs=1 -complete=file HaxeSetBuildXML call haxe#SetBuildXml(<q-args>)<cr>
+
+call actions#AddAction('run haxe compiler', {'action': funcref#Function('haxe#CompileRHS')})

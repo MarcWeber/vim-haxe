@@ -8,7 +8,9 @@
     "vim-addon-mw-utils": {},
     "tlib": {},
     "vim-addon-views": {},
+    "vim-addon-actions": {},
     "vim-addon-goto-thing-at-cursor": {},
+    "vim-addon-background-cmd": {},
   },
   "description" : "haxe completion for Vim"
 }
