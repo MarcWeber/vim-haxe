@@ -491,10 +491,11 @@ fun! haxe#gfHandler()
     call add(r, {'filename': d['file'], 'break': 1, 'line_nr': get(d,'line',0), 'info': d['what'] })
     call add(r, {'filename': views#View('fun',['haxe#ClassView',class], 1), 'break': 1})
   endfor
-  let fdd = haxe#FlexDocsDir().'/**/'.class.'.html'
-  if fdd
-    for f in split(glob(),"\n")
-      call add(r, {'exec': substitute(s:c['browser'],'%URL%',f,'') , 'break': 1, 'info': 'flex docs '.f})
+
+  let fdd = haxe#FlexDocsDir()
+  if type(fdd) == type('') && fdd != ''
+    for f in split(glob(fdd.'/**/'.class.'.html'),"\n")
+      call add(r, {'exec': substitute(s:c['browser'],'%URL%',f,'') , 'break': 1, 'info': 'flex docs '.class})
     endfor
   endif
   return r
