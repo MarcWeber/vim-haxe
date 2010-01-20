@@ -261,7 +261,7 @@ fun! haxe#ASFiles()
   let fdc = s:c['flash_develop_checkout']
 
   if fdc != ''
-    let tv = get(haxe#BuildHXML(),'flash_target_version', -1)
+    let tv = get(haxe#BuildHXML(),'flash_target_version', 10)
     if tv == 9
       call add(files, { 'cachable': 1, 'files': glob#Glob(fdc.'/'.'FD3/FlashDevelop/Bin/Debug/Library/AS3/intrinsic/FP9/**/*.as', {'cachable':1})})
     elseif tv == 10
