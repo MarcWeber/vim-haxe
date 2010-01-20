@@ -292,7 +292,7 @@ fun! haxe#ScannedFiles()
 endfun
 
 fun! haxe#FindImportFromQuickFix()
-  let class = matchstr(getline('.'), 'Class not found : \zs.*\|Unknown identifier : \zs.*')
+  let class = matchstr(getline('.'), 'Class not found : \zs.*\|Unknown identifier : \zs.*\|The definition of base class \zs[^ ]*\ze was not found')
 
   let solutions = []
 
@@ -458,7 +458,7 @@ fun! haxe#ClassInfo(object)
   while 1
     let items = haxe#ThingByRegex('^'.object.'$', 'class')
     if empty(items) | break | endif
-    if len(items) > 1 | echoe "using first match for ".object | endif
+    if len(items) > 1 | echom "using first match for ".object | endif
     let match = items[0]
     if !exists('d')
       let d = match
