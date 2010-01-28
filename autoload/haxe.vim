@@ -313,6 +313,12 @@ fun! haxe#FindImportFromQuickFix()
       endif
     endfor
   endfor
+  if matchstr(getline('.'),'[^|]*\.\zs[^|]*') == 'as'
+    for idx in range(len(solutions)-1,0,-1)
+      call insert(solutions, substitute(solutions[idx],'\.[^.]*$', '.*',''), idx)
+    endfor
+  endif
+  let solutions = tlib#list#Uniq(solutions)
   if empty(solutions)
     echoe "not found: '".class.'"'
     return
@@ -330,7 +336,7 @@ fun! haxe#FindImportFromQuickFix()
     return
   endif
 
-  if search('^import','cwb') == 0
+  if search('^\s*import','cwb') == 0
     " no import found, add above (first line)
     let a = "ggO"
   else
