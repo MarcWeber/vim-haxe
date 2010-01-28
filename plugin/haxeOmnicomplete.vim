@@ -57,8 +57,8 @@ if !exists('g:vim_haxe_no_filetype')
   augroup end
 endif
 
-command! -nargs=1 GotoThing :call haxe#GotoThingRegex('^'.<q-args>.'$')
-command! -nargs=1 GotoThingRegex :call haxe#GotoThingRegex(<f-args>)
+command! -nargs=1 GotoThing :call haxe#GotoThing('',<q-args>)
+command! -nargs=1 GotoThingRegex :call haxe#GotoThing('regex', <f-args>)
 command! -nargs=1 ParentsOfObject :echo join(haxe#ClassInfo(<f-args>)["hirarchy"]," > ")
 command! -nargs=1 -complete=file HaxeSetBuildXML call haxe#SetBuildXml(<q-args>)<cr>
 

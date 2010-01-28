@@ -272,9 +272,11 @@ fun! haxe#ASFiles()
   endif
 
   for d in s:c['source_directories']
-    call add(files, { 'cachable' : get(d, 'cachable', 0), 'files': glob#Glob(d['dir'].'/**/*.as', {'cachable':1})})
-    call add(files, { 'cachable' : get(d, 'cachable', 0), 'files': glob#Glob(d['dir'].'/**/*.hx', {'cachable':1})})
+    call add(files, { 'cachable' : get(d, 'cachable', 0), 'files': glob#Glob(d['dir'].'/**/*.as')})
+    call add(files, { 'cachable' : get(d, 'cachable', 0), 'files': glob#Glob(d['dir'].'/**/*.hx')})
   endfor
+  call add(files, { 'cachable' : 0, 'files': split(glob('./**/*.as'),"\n")})
+  call add(files, { 'cachable' : 0, 'files': split(glob('./**/*.hx'),"\n")})
 
   return files
 endf
@@ -440,8 +442,10 @@ fun! haxe#ThingByString(name, ...)
   return list
 endf
 
-fun! haxe#GotoThingRegex(name)
-  let things = haxe#ThingByString(a:name)
+" GotoThing('', name)
+" GotoThing('regex', regex)
+fun! haxe#GotoThing(type, name)
+  let things = a:type == 'regex' ? haxe#ThingByRegex(a:name) : haxe#ThingByString(a:name)
   let thing = tlib#input#List("i",'choose thing', map(copy(things),'v:val["what"]'))
   if thing == ''
     echoe "not found"
@@ -537,9 +541,9 @@ fun! haxe#ScanASFile(filename)
 
   let regex = join([
     \ '\(interface\)\s\+\([^ ]*\)',
-    \ '\(class\)\s\+\([^ ]*\)\s\+\%(extends\s\+\([^ ]*\)\)\?',
-    \ '^\(package\)\s\+\([^\n\r ]*\)',
-    \ '\(function\)\s\+\([^\n\r ]*\)'
+    \ '\(class\)\s\+\([^{ ]*\)\%(\s\+extends\s\+\([^ ]*\)\)\?',
+    \ '^\(package\)\s\+\([^{(\n\r ]*\)',
+    \ '\(function\)\s\+\([^{(\n\r ]*\)'
     \ ], '\|')
 
   let regex2 = '\(public\)\%(\s\+\%(static\|const\)\)*\s\+\([^\n\r ]*\)\%(\s\+:\s\+\([^\n\r ]*\)\)\?'
