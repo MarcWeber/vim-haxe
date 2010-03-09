@@ -66,18 +66,32 @@ fun! haxe#CompleteHAXEFun(line, col, base)
   let strCmd="haxe --no-output -main " . classname . " " . d['ExtraCompletArgs']. " --display " . '"' . tmpFilename . '"' . "@" . bytePos . " -cp " . '"' . expand("%:p:h") . '" -cp "'.tmpDir.'"'
 
   try
+    let dolstErrors = 0
+
     " We keep the results from the comand in a variable
     let g:strCmd = strCmd
     let res=system(strCmd)
     "call delete(tmpFilename)
-    if v:shell_error != 0 "If there was an error calling haxe, we return no matches and inform the user
+    if v:shell_error != 0
       if !exists("b:haxeErrorFile")
         let b:haxeErrorFile = tempname()
       endif
-      throw "lstErrors"
+      " HaXe still returns completions. However there may be errors
+      " So do both: show errors and completions
+      let dolstErrors =1
     endif
 
     let lstXML = split(res,"\n") " We make a list with each line of the xml
+
+    " strip error lines
+    let tagLine = 0
+    while tagLine < len(lstXML) && lstXML[tagLine][0] != '<'
+      let tagLine += 1
+    endw
+    let lstXML = lstXML[(tagLine):]
+    if tagLine > 0
+      let dolstErrors = 1
+    endif
 
     if len(lstXML) == 0
       let lstComplete = []
@@ -86,7 +100,7 @@ fun! haxe#CompleteHAXEFun(line, col, base)
         if !exists("b:haxeErrorFile")
           let b:haxeErrorFile = tempname()
         endif
-        throw "lstErrors"
+        let dolstErrors = 1
       else " If it was a type definition
         call filter(lstXML,'v:val !~ "type>"') " Get rid of the type tags
         call map(lstXML,'haxe#HaxePrepareList(v:val)') " Get rid of the xml in the other lines
@@ -114,13 +128,16 @@ fun! haxe#CompleteHAXEFun(line, col, base)
       call add(lstComplete,dicTmp)
     endfor
   catch lstErrors
+    let dolstErrors = 1
+  endtry
+
+  if dolstErrors
     let lstErrors = split(substitute(res, tmpFilename, expand('%'),'g'),"\n")
     call writefile(lstErrors,b:haxeErrorFile)
     execute "cgetfile ".b:haxeErrorFile
     " Errors will be available for view with the quickfix commands
     cope | wincmd p
-    let lstComplete = []
-  endtry
+  endif
 
   call filter(lstComplete,'v:val["word"] =~ '.string('^'.a:base))
   return lstComplete
