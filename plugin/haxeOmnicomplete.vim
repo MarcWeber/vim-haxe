@@ -63,3 +63,20 @@ command! -nargs=1 ParentsOfObject :echo join(haxe#ClassInfo(<f-args>)["hirarchy"
 command! -nargs=1 -complete=file HaxeSetBuildXML call haxe#SetBuildXml(<q-args>)<cr>
 
 call actions#AddAction('run haxe compiler', {'action': funcref#Function('haxe#CompileRHS')})
+
+" register completions functions
+fun! s:RegisterCompletions()
+  let completions =  [
+        \ {'description' : 'HAXE complete functions', 'func': 'haxe#CompleteHAXE'},
+        \ {'description' : 'HAXE complete classes', 'func': 'haxe#CompleteClassNames'},
+        \ {'description' : 'HAXE complete classes', 'func': 'haxe#CompleteClassNames'}
+        \ ]
+
+  for c in completions
+    let c['scope'] = 'haxe'
+    let c['completeopt'] = 'preview,menu,menuone'
+    call vim_addon_completion#RegisterCompletionFunc(c)
+  endfor
+endf
+
+call s:RegisterCompletions()

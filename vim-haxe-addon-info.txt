@@ -11,6 +11,7 @@
     "vim-addon-actions": {},
     "vim-addon-goto-thing-at-cursor": {},
     "vim-addon-background-cmd": {},
+    "vim-addon-completion": {},
   },
   "description" : "haxe completion for Vim"
 }

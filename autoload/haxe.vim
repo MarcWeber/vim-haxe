@@ -27,6 +27,10 @@ fun! haxe#TmpDir()
   return g:vim_haxe_tmp_dir
 endf
 
+" HAXE executable completion function {{{1
+
+" completes using haxe compiler
+"
 " this function writes the current buffer
 " col=1 is first character
 " g:haxe_build_hxml should be set to the buildfile so that important
@@ -34,7 +38,7 @@ endf
 " You should consider creating one .hxml file for each target..
 "
 " base: prefix used to filter results
-fun! haxe#GetCompletions(line, col, base)
+fun! haxe#CompleteHAXEFun(line, col, base)
   " Start constructing the command for haxe
   " The classname will be based on the current filename
   " On both the classname and the filename we make sure
@@ -118,6 +122,13 @@ fun! haxe#GetCompletions(line, col, base)
     let lstComplete = []
   endtry
 
+  call filter(lstComplete,'v:val["word"] =~ '.string('^'.a:base))
+  return lstComplete
+endf
+
+" completes classnames
+fun! haxe#CompleteClassNamesFun(line, col, base)
+  let lstComplete = []
   if empty(lstComplete)
     " add classes from packages
     for d in funcref#Call(s:c['f_as_files'])
@@ -133,20 +144,40 @@ fun! haxe#GetCompletions(line, col, base)
       endfor
     endfor
   endif
-
   call filter(lstComplete,'v:val["word"] =~ '.string('^'.a:base))
   return lstComplete
-
 endf
 
-" The main omnicompletion function
-fun! haxe#Complete(findstart,base)
-    if a:findstart
-        let b:haxePos = haxe#CursorPositions()
-        return b:haxePos['col']
-    else
-        return haxe#GetCompletions(b:haxePos['line'], b:haxePos['col'], a:base)
-    endif
+" completion helper function calling completion functions {{{1
+" calls completion functions
+fun! haxe#CompleteHelper(findstart, base, funs)
+  if a:findstart
+    let b:haxePos = haxe#CursorPositions()
+    return b:haxePos['col']
+  else
+    let result = []
+    for f in a:funs
+      call extend(result, call(function('haxe#'.f),[b:haxePos['line'], b:haxePos['col'], a:base]))
+    endfor
+    return result
+  endif
+endf
+
+" completion interface: use these functions {{{1
+
+" complete using haxe executable
+fun! haxe#CompleteHAXE(findstart, base)
+  return haxe#CompleteHelper(a:findstart, a:base, ["CompleteHAXEFun"])
+endfun
+
+" complete classnames (may be slow)
+fun! haxe#CompleteClassNames(findstart, base)
+  return haxe#CompleteHelper(a:findstart, a:base, ["CompleteClassNamesFun"])
+endfun
+
+" complete both
+fun! haxe#CompleteAll(findstart, base)
+  return haxe#CompleteHelper(a:findstart, a:base, ["CompleteHAXEFun", "CompleteClassNamesFun"])
 endfun
 
 " must be called using <c-r>=haxe#DefineLocalVar()<c-r> from an imap mapping
