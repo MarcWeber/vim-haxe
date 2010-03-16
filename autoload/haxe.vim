@@ -73,9 +73,6 @@ fun! haxe#CompleteHAXEFun(line, col, base)
     let res=system(strCmd)
     "call delete(tmpFilename)
     if v:shell_error != 0
-      if !exists("b:haxeErrorFile")
-        let b:haxeErrorFile = tempname()
-      endif
       " HaXe still returns completions. However there may be errors
       " So do both: show errors and completions
       let dolstErrors =1
@@ -97,9 +94,6 @@ fun! haxe#CompleteHAXEFun(line, col, base)
       let lstComplete = []
     elseif lstXML[0] != '<list>' "If is not a class definition, we check for type definition
       if lstXML[0] != '<type>' " If not a type definition then something went wrong... 
-        if !exists("b:haxeErrorFile")
-          let b:haxeErrorFile = tempname()
-        endif
         let dolstErrors = 1
       else " If it was a type definition
         call filter(lstXML,'v:val !~ "type>"') " Get rid of the type tags
@@ -133,8 +127,11 @@ fun! haxe#CompleteHAXEFun(line, col, base)
 
   if dolstErrors
     let lstErrors = split(substitute(res, tmpFilename, expand('%'),'g'),"\n")
-    call writefile(lstErrors,b:haxeErrorFile)
-    execute "cgetfile ".b:haxeErrorFile
+    if !exists("s:haxeErrorFile")
+      let s:haxeErrorFile = tempname()
+    endif
+    call writefile(lstErrors,s:haxeErrorFile)
+    execute "cgetfile ".s:haxeErrorFile
     " Errors will be available for view with the quickfix commands
     cope | wincmd p
   endif
@@ -207,7 +204,7 @@ fun! haxe#DefineLocalVar()
   let line_pref = substitute(lineTC,'[^. \t()]*$','','')
   let base = substitute(line_till_completion,'.\{-}\([^ .()]*\)$','\1','')
 
-  let completions = haxe#GetCompletions(line('.'), strlen(line_pref), base)
+  let completions = haxe#CompleteHAXEFun(line('.'), strlen(line_pref), base)
   " filter again, exact match
   call filter(completions,'v:val["word"] =~ '.string('^'.base.'$'))
   if len(completions) == 1
@@ -550,15 +547,34 @@ fun! haxe#gfHandler()
     call add(r, {'filename': views#View('fun',['haxe#ClassView',class], 1), 'break': 1})
   endfor
 
-  let fdd = haxe#FlexDocsDir()
-  if type(fdd) == type('') && fdd != ''
-    for f in split(glob(fdd.'/**/'.class.'.html'),"\n")
-      call add(r, {'exec': substitute(s:c['browser'],'%URL%',f,'') , 'break': 1, 'info': 'flex docs '.class})
-    endfor
-  endif
+  " Flex docs
+  for f in haxe#DocFor(class)
+    call add(r, {'exec': haxe#DocAction(f) , 'break': 1, 'info': 'flex docs '.class})
+  endfor
   return r
 endf
 
+
+" Flex documentation {{{1
+" glob in doc dircetory
+
+fun! haxe#DocAction(htmlFile)
+  return substitute(s:c['browser'],'%URL%',a:htmlFile,'')
+endf
+
+fun! haxe#HtmlDocFor(class)
+  let fdd = haxe#FlexDocsDir()
+  if type(fdd) == type('') && fdd != ''
+    return  split(glob(fdd.'/**/'.a:class.'.html'),"\n")
+  endif
+endf
+
+fun! haxe#OpenDocFor(class)
+  let list = haxe#HtmlDocFor(a:class)
+  exec haxe#DocAction(tlib#input#List("s","select html doc page", list))
+endf
+
+" }}}1
 
 let s:thisFile=expand('<sfile>')
 

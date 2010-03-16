@@ -57,6 +57,7 @@ if !exists('g:vim_haxe_no_filetype')
   augroup end
 endif
 
+command! -nargs=1 FlexDoc :call haxe#OpenDocFor(<f-args>)
 command! -nargs=1 GotoThing :call haxe#GotoThing('',<q-args>)
 command! -nargs=1 GotoThingRegex :call haxe#GotoThing('regex', <f-args>)
 command! -nargs=1 ParentsOfObject :echo join(haxe#ClassInfo(<f-args>)["hirarchy"]," > ")
