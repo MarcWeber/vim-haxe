@@ -548,7 +548,7 @@ fun! haxe#gfHandler()
   endfor
 
   " Flex docs
-  for f in haxe#DocFor(class)
+  for f in haxe#HtmlDocFor(class)
     call add(r, {'exec': haxe#DocAction(f) , 'break': 1, 'info': 'flex docs '.class})
   endfor
   return r
@@ -669,3 +669,24 @@ fun! haxe#CompileRHS()
 
   return "call bg#RunQF(['haxe',".string(haxe#BuildHXMLPath())."], 'c', ".string(ef).")"
 endfun
+
+fun! haxe#GetterSetter()
+  let varName = input('var name: ')
+  let type = input('type: ', 'Int')
+  let str = "public var name(getName, setName) : type;\n"
+         \ ."private function getName(): type\n"
+         \ ."{\n"
+         \ ."\treturn name;\n"
+         \ ."}\n"
+         \ ."private function setName(value : type): type\n"
+         \ ."{\n"
+         \ ."\tname = value;\n"
+         \ ."\treturn value; // if you don't return a value return value will be set to Void\n"
+         \ ."}\n"
+  let u = substitute(varName,'^\(.\)','\U\1','')
+  let replace = {'name': varName, 'Name': u, 'type': type }
+  for [k,v] in items(replace)
+    let str = substitute(str, k, v, 'g')
+  endfor
+  return str
+endf

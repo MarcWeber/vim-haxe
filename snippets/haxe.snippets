@@ -1,0 +1,133 @@
+snippet iterator
+	class IntIter {
+	    var min : Int;
+	    var max : Int;
+	
+	    public function new( min : Int, max : Int ) {
+	        this.min = min;
+	        this.max = max;
+	    }
+	
+	    public function hasNext() {
+	        return( min < max );
+	    }
+	
+	    public function next() {
+	        return min++;
+	    }
+	}
+snippet switch
+	switch (<++>){
+	      case <++>:
+	        trace("hello world");
+	      case 1:
+	        var but = flash.Lib.current.attachMovie("button", "but001", 0);
+	        but._x = 10;
+	        but._y = 20;
+	      case 2,3:
+	        trace("undefined");
+	      case default:
+	    }
+snippet case
+	case ${1}:
+		${2}
+snippet filters
+	var shadow : DropShadowFilter = new DropShadowFilter(
+	  4,45,0x000000,0.8,
+	  4,4,
+	  0.65,BitmapFilterQuality.HIGH, false, false
+	);
+	var af : Array<Dynamic> = new Array();
+	af.push(shadow);
+	sprite.filters = af;
+snippet timer
+	// set up a timer 
+	progressTimer = new Timer(10);
+	progressTimer.addEventListener(TimerEvent.TIMER,updateProgress);
+	progressTimer.stop();
+	
+	static function updateProgress(event:TimerEvent){
+snippet try
+	try{
+	}catch(e:Dynamic){
+	  // Ignore any errors.
+	}
+snippet for
+	for( x in it )
+snippet class
+	class ${1:name} {
+
+	    public function new(arg) {
+			super(arg)
+	    }
+
+		static function main() {
+		  trace("hello world");
+		}    
+
+	}
+snippet new
+	public function new(${1:arg}) {
+		super($1);
+		${2}
+	}
+snippet fun
+	function ${2:name}(${3:arg}) {
+		${4}
+	}
+
+snippet trace
+	trace("${1}");
+snippet f_trace
+	flash.Lib.trace("${1}");
+snippet resize_listener
+	class Test1 extends Sprite {
+
+
+	  static function main() {
+		/*
+
+		var st:Test1 = new Test1();
+
+		var current = flash.Lib.current;
+		current.addChild(st);
+		current.addEventListener(Event.RESIZE, resizeListener);
+		*/
+
+		var bg = new Test1();
+		Lib.current.stage.addChild(bg);
+		Lib.current.stage.addEventListener(Event.RESIZE, resizeListener);
+
+		flash.Lib.current.stage.align = flash.display.StageAlign.TOP_LEFT;
+		Lib.current.stage.scaleMode = flash.display.StageScaleMode.NO_SCALE;
+
+	  }    
+
+
+	  static public function resizeListener(a){
+		trace("resized");
+	  }
+
+	}
+snippet current
+	var current:flash.display.MovieClip = flash.Lib.current;
+snippet stage_scale
+	stage.align = flash.display.StageAlign.TOP_LEFT;
+	stage.scaleMode = flash.display.StageScaleMode.NO_SCALE;
+snippet params
+		var params:Dynamic<String> = flash.Lib.current.loaderInfo.parameters;
+snippet g_fill
+	${1:g}.beginFill(0x${2:FFFFFF});
+		${3}
+	$1.endFill();
+snippet cast
+	cast(${1:cast_this}, ${2:type})
+snippet pv private
+	private var 
+snippet pv public
+	public var
+# snipMate does not upport making vars upper case or such. (See its documentation) That's why
+# I'm using a function to generate the snippet.
+snippet getter_setter
+	`haxe#GetterSetter()`
+
