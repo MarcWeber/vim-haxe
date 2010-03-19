@@ -85,7 +85,7 @@ fun! haxe#CompleteHAXEFun(line, col, base)
 
     " strip error lines
     let tagLine = 0
-    while tagLine < len(lstXML) && lstXML[tagLine][0] != '<'
+    while tagLine < len(lstXML) && lstXML[tagLine] !~ '^<list'
       let tagLine += 1
     endw
     let lstXML = lstXML[(tagLine):]
