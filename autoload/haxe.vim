@@ -51,6 +51,7 @@ fun! haxe#CompleteHAXEFun(line, col, base)
   " Thus truncate the file at the location where completion starts
   " This also means that error locations must be rewritten
   let tmpFilename = tmpDir.'/'.expand('%:t')
+  let g:tmpFilename = tmpFilename
 
   let linesTillC = getline(1, a:line-1)+[getline('.')[:(a:col-1)]]
   " hacky: remove package name. This way the file doesn't have to be put into
@@ -70,7 +71,9 @@ fun! haxe#CompleteHAXEFun(line, col, base)
 
     " We keep the results from the comand in a variable
     let g:strCmd = strCmd
-    let res=system(strCmd)
+    let res=system(strCmd.' 2>&1')
+
+    let g:res = res
     "call delete(tmpFilename)
     if v:shell_error != 0
       " HaXe still returns completions. However there may be errors
@@ -662,29 +665,58 @@ fun! haxe#FlexDocsDir()
   endif
 endf
 
-fun! haxe#CompileRHS()
+fun! haxe#CompileRHS(...)
+  let target = a:0 > 0 ? a:1 : ""
   let ef= 
         \  '%f:%l:\ characters\ %c-%*[^\ ]\ %m,'
         \ .'%f:%l:\ %m'
 
-  return "call bg#RunQF(['haxe',".string(haxe#BuildHXMLPath())."], 'c', ".string(ef).")"
+  if target == ""
+    return "call bg#RunQF(['haxe',".string(haxe#BuildHXMLPath())."], 'c', ".string(ef).")"
+  elseif target[-4:] == "neko"
+    let class = expand('%:r')
+    let nekoFile = class.'.n'
+    if target == "target-neko"
+      let args = ['haxe','-main',class,'-neko',nekoFile]
+      let args = eval(input('compilation args: ', string(args)))
+      return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
+    elseif target == "run-neko"
+      let args = ['neko',nekoFile]
+      let args = eval(input('compilation args: ', string(args)))
+      return "call bg#RunQF(".string(args).", 'c', ".string("none").")"
+    endif
+  endif
 endfun
 
 fun! haxe#GetterSetter()
+  " create private var and property
+  " I hope this is what most people need most of the time (?)
   let varName = input('var name: ')
   let type = input('type: ', 'Int')
-  let str = "public var name(getName, setName) : type;\n"
+
+  let str = "// property ".varName." {{{1\n" 
+         \ ."private var PN: type;\n"
+         \ ."public var name(getName, setName) : type;\n"
          \ ."private function getName(): type\n"
          \ ."{\n"
-         \ ."\treturn name;\n"
+         \ ."\treturn PN;\n"
          \ ."}\n"
          \ ."private function setName(value : type): type\n"
          \ ."{\n"
-         \ ."\tname = value;\n"
-         \ ."\treturn value; // if you don't return a value return value will be set to Void\n"
+         \ ."\tif (PN == value) return PN;\n"
+         \ ."\tPN = value;\n"
+         \ ."\treturn value;\n"
          \ ."}\n"
+         \ ."// }}}"
+
   let u = substitute(varName,'^\(.\)','\U\1','')
-  let replace = {'name': varName, 'Name': u, 'type': type }
+  let replace = {
+    \ 'name': varName,
+    \ 'Name': u,
+    \ 'type': type,
+    \ 'PN': 'p'.varName
+    \}
+
   for [k,v] in items(replace)
     let str = substitute(str, k, v, 'g')
   endfor

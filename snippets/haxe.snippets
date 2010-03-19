@@ -56,15 +56,19 @@ snippet for
 	for( x in it )
 snippet class
 	class ${1:name} {
-
-	    public function new(arg) {
+	
+		function new(arg) {
 			super(arg)
-	    }
+		
 
 		static function main() {
-		  trace("hello world");
+			trace("hello world");
 		}    
 
+	}
+snippet main
+	static function main() {
+		trace("hello world");
 	}
 snippet new
 	public function new(${1:arg}) {
@@ -122,6 +126,12 @@ snippet g_fill
 	$1.endFill();
 snippet cast
 	cast(${1:cast_this}, ${2:type})
+snippet interface
+	interface ${1:name}${2: implements this}${3:, implements other}{
+		var thing : String;
+		function name(): String;
+	}
+		
 snippet pv private
 	private var 
 snippet pv public
@@ -131,3 +141,11 @@ snippet pv public
 snippet getter_setter
 	`haxe#GetterSetter()`
 
+snippet backend_conditional_statement
+	#if js, php, cpp
+	#end
+
+snippet typedef
+	typedef Position<T> = {
+		var x:T;
+	}

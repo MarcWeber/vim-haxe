@@ -64,13 +64,14 @@ command! -nargs=1 ParentsOfObject :echo join(haxe#ClassInfo(<f-args>)["hirarchy"
 command! -nargs=1 -complete=file HaxeSetBuildXML call haxe#SetBuildXml(<q-args>)<cr>
 
 call actions#AddAction('run haxe compiler', {'action': funcref#Function('haxe#CompileRHS')})
+call actions#AddAction('run haxe compiler targeting neko', {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["target-neko"] })})
+call actions#AddAction('run neko current-file.n', {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["run-neko"] })})
 
 " register completions functions
 fun! s:RegisterCompletions()
   let completions =  [
         \ {'description' : 'HAXE complete functions', 'func': 'haxe#CompleteHAXE'},
         \ {'description' : 'HAXE complete classes', 'func': 'haxe#CompleteClassNames'},
-        \ {'description' : 'HAXE complete classes', 'func': 'haxe#CompleteClassNames'}
         \ ]
 
   for c in completions
