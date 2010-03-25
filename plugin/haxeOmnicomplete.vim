@@ -64,8 +64,10 @@ command! -nargs=1 ParentsOfObject :echo join(haxe#ClassInfo(<f-args>)["hirarchy"
 command! -nargs=1 -complete=file HaxeSetBuildXML call haxe#SetBuildXml(<q-args>)<cr>
 
 call actions#AddAction('run haxe compiler', {'action': funcref#Function('haxe#CompileRHS')})
-call actions#AddAction('run haxe compiler targeting neko', {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["target-neko"] })})
-call actions#AddAction('run neko current-file.n', {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["run-neko"] })})
+for target in ["neko","cpp","php"]
+  call actions#AddAction('run haxe compiler targeting '.target, {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["target-".target] })})
+  call actions#AddAction('run haxe compilation result target '.target, {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["run-".target] })})
+endfor
 
 " register completions functions
 fun! s:RegisterCompletions()

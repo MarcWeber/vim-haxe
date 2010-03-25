@@ -673,48 +673,72 @@ fun! haxe#CompileRHS(...)
 
   if target == ""
     return "call bg#RunQF(['haxe',".string(haxe#BuildHXMLPath())."], 'c', ".string(ef).")"
-  elseif target[-4:] == "neko"
-    let class = expand('%:r')
+  endif
+
+  let class = expand('%:r')
+
+  if target[-4:] == "neko"
     let nekoFile = class.'.n'
+
     if target == "target-neko"
-      let args = ['haxe','-main',class,'-neko',nekoFile]
-      let args = eval(input('compilation args: ', string(args)))
+      let args = actions#VerifyArgs(['haxe','-main',class,'-neko',nekoFile])
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     elseif target == "run-neko"
-      let args = ['neko',nekoFile]
-      let args = eval(input('compilation args: ', string(args)))
+      let args = actions#VerifyArgs(['neko',nekoFile])
       return "call bg#RunQF(".string(args).", 'c', ".string("none").")"
     endif
   endif
+
+  if target[-3:] == "php"
+    let phpFront = "index.php"
+    let phpDir = "php-target"
+
+    if target == "target-php"
+      let args = actions#VerifyArgs(['haxe','-main',class,'--php-front',phpFront,'-php', phpDir])
+      return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
+    elseif target == "run-php"
+      let args = actions#VerifyArgs(['php',phpDir.'/'.phpFront])
+      return "call bg#RunQF(".string(args).", 'c', ".string("none").")"
+    endif
+  endif
+
+  throw "target not implemented yet (TODO)"
+
 endfun
 
-fun! haxe#GetterSetter()
+fun! haxe#GetterSetter(action)
   " create private var and property
   " I hope this is what most people need most of the time (?)
   let varName = input('var name: ')
   let type = input('type: ', 'Int')
 
-  let str = "// property ".varName." {{{1\n" 
-         \ ."private var PN: type;\n"
-         \ ."public var name(getName, setName) : type;\n"
-         \ ."private function getName(): type\n"
-         \ ."{\n"
-         \ ."\treturn PN;\n"
-         \ ."}\n"
-         \ ."private function setName(value : type): type\n"
-         \ ."{\n"
-         \ ."\tif (PN == value) return PN;\n"
-         \ ."\tPN = value;\n"
-         \ ."\treturn value;\n"
-         \ ."}\n"
-         \ ."// }}}"
+  let str  =''
+  let str .= "// property ".varName." {{{1\n" 
+  let str .= "private var PN: type;\n"
+  let str .= "public var name(getName, setName) : type;\n"
+  let str .= "private function getName(): type\n"
+  let str .= "{\n"
+  let str .= "\treturn PN;\n"
+  let str .= "}\n"
+  let str .= "private function setName(value : type): type\n"
+  let str .= "{\n"
+  let str .= "\tif (PN == value) return PN;\n"
+  if a:action
+    let str .= "\tif (PN != null)\n"
+    let str .= "\t\t;\n"
+    let str .= "\tif (value != null)\n"
+    let str .= "\t\t;\n"
+  endif
+  let str .= "\treturn PN = value;\n"
+  let str .= "}\n"
+  let str .= "// }}}"
 
   let u = substitute(varName,'^\(.\)','\U\1','')
   let replace = {
     \ 'name': varName,
     \ 'Name': u,
     \ 'type': type,
-    \ 'PN': 'p'.varName
+    \ 'PN': '_'.varName
     \}
 
   for [k,v] in items(replace)

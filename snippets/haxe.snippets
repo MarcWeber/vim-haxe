@@ -75,9 +75,21 @@ snippet new
 		super($1);
 		${2}
 	}
-snippet fun
-	function ${2:name}(${3:arg}) {
-		${4}
+snippet fun private
+	function ${1:name}(${2:arg}) {
+		${3}
+	}
+snippet fun public
+	public function ${1:name}(${2:arg}) {
+		${3}
+	}
+snippet fun private override
+	override function ${1:name}(${2:arg}) {
+		${3}
+	}
+snippet fun public override
+	public override function ${1:name}(${2:arg}) {
+		${3}
 	}
 
 snippet trace
@@ -132,17 +144,20 @@ snippet interface
 		function name(): String;
 	}
 		
-snippet pv private
+snippet pv private var
 	private var 
-snippet pv public
+snippet pv public var
 	public var
 # snipMate does not upport making vars upper case or such. (See its documentation) That's why
 # I'm using a function to generate the snippet.
 snippet getter_setter
-	`haxe#GetterSetter()`
+	`haxe#GetterSetter(0)`
 
-snippet backend_conditional_statement
-	#if js, php, cpp
+snippet getter_setter_action
+	`haxe#GetterSetter(1)`
+
+snippet #if
+	#if js, php, cpp, flash
 	#end
 
 snippet typedef
