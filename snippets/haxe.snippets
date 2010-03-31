@@ -79,16 +79,18 @@ snippet fun private
 	function ${1:name}(${2:arg}) {
 		${3}
 	}
-snippet fun public
+snippet pcf public function
 	public function ${1:name}(${2:arg}) {
+		${3}
+	}
+
+
+snippet pcof public override function
+	public override function ${1:name}(${2:arg}) {
 		${3}
 	}
 snippet fun private override
 	override function ${1:name}(${2:arg}) {
-		${3}
-	}
-snippet fun public override
-	public override function ${1:name}(${2:arg}) {
 		${3}
 	}
 
@@ -154,7 +156,10 @@ snippet getter_setter
 	`haxe#GetterSetter(0)`
 
 snippet getter_setter_action
-	`haxe#GetterSetter(1)`
+	`haxe_snipmate#GetterSetter(1)`
+
+snippet super
+	`haxe_snipmate#Super()`
 
 snippet #if
 	#if js, php, cpp, flash
@@ -164,3 +169,11 @@ snippet typedef
 	typedef Position<T> = {
 		var x:T;
 	}
+snippet resource_bytes
+	haxe.Resource.getBytes("${1:name}")
+snippet resource_bytes_load
+	var loader = new Loader();
+	loader.contentLoaderInfo.addEvent(Event.COMPLETE, function (e:Dynamic){});
+	loader.loadBytes(haxe.Resource.getBytes("${1:name}"));
+snippet untyped
+	untyped{ ${1} }
