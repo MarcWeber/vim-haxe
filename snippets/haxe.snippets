@@ -54,8 +54,8 @@ snippet try
 	}
 snippet for
 	for( x in it )
-snippet class
-	class ${1:name} {
+snippet class HAXE
+	class `expand('%:t:r')` {
 	
 		function new(arg) {
 			super(arg)
@@ -89,7 +89,7 @@ snippet pcof public override function
 	public override function ${1:name}(${2:arg}) {
 		${3}
 	}
-snippet fun private override
+snippet of private override function
 	override function ${1:name}(${2:arg}) {
 		${3}
 	}
@@ -177,3 +177,15 @@ snippet resource_bytes_load
 	loader.loadBytes(haxe.Resource.getBytes("${1:name}"));
 snippet untyped
 	untyped{ ${1} }
+snippet enum
+	enum ${1:name} {
+		blue;
+		grey( v : Int );
+	}
+snippet flash_trace_to_log
+    haxe.Log.trace = function (v:Dynamic, ?infos: haxe.PosInfos ):Void{
+      var loc = (infos == null) ? "" : infos.fileName+" "+infos.lineNumber+" ";
+      flash.Lib.trace(loc+v);
+    }
+snippet get_host
+	ExternalInterface.call("window.location.href.match(/http:\\/\\/([^/]*)/)[1].toString",[])
