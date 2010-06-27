@@ -262,9 +262,13 @@ fun! haxe#HaxePrepareList(v)
     return text
 endfun
 
+fun! haxe#HXMLFilesCompletion(ArgLead, CmdLine, CursorPos)
+  return filter(split(glob("*.hxml"), "\n"),'v:val =~'.string(a:ArgLead))
+endf
+
 fun! haxe#BuildHXMLPath()
   if !exists('g:haxe_build_hxml')
-    let g:haxe_build_hxml=input('specify your build.hxml file. It should contain one haxe invokation only: ','','file')
+    let g:haxe_build_hxml=input('specify your build.hxml file. It should contain one haxe invokation only: ','','customlist,haxe#HXMLFilesCompletion')
   endif
   return g:haxe_build_hxml
 endf
