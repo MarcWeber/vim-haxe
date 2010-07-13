@@ -16,3 +16,5 @@ if !exists('g:vim_haxe_no_mappings')
 endif
 
 call on_thing_handler#AddOnThingHandler('b', funcref#Function('haxe#gfHandler'))
+
+let b:match_words='#if:#else\>:#elif\>:#end\>'

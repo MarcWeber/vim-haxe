@@ -155,10 +155,10 @@ if g:vim_haxe_syntax_scheme_nr == 1
   syn match   haxeNumber		 "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
 
 
-  syn region haxeCondIf start="#if \+!\?" end="\W" skip="([A-Za-z0-9_ |&!]\+)"
-  syn region haxeCondElse start="#else \+!\?" end="\W" skip="([A-Za-z0-9_ |&!]\+)"
-  syn match haxeCondEnd "#end"
-  syn match haxeCondError "#else *$"
+  syn match haxeCondIf "^#if"
+  syn match haxeCondElse "^#else$"
+  syn match haxeCondEnd "^#end"
+  syn match haxeCondError "^#else.\+"
 
   " unicode characters
   syn match   haxeSpecial "\\u\d\{4\}"
@@ -422,10 +422,10 @@ if g:vim_haxe_syntax_scheme_nr == 2
   syn match   haxeNumber       "\<\d\+\([eE][-+]\=\d\+\)\=[fFdD]\>"
 
 
-  syn region haxeCondIf start="#if \+!\?" end="\W" skip="([A-Za-z0-9_ |&!]\+)"
-  syn region haxeCondElse start="#else \+!\?" end="\W" skip="([A-Za-z0-9_ |&!]\+)"
-  syn match haxeCondEnd "#end"
-  syn match haxeCondError "#else *$"
+  syn match haxeCondIf "^#if"
+  syn match haxeCondElse "^#else$"
+  syn match haxeCondEnd "^#end"
+  syn match haxeCondError "^#else.\+"
 
   " unicode characters
   syn match   haxeSpecial "\\u\d\{4\}"
