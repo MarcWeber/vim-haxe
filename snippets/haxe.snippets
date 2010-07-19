@@ -53,7 +53,7 @@ snippet try
 	  // Ignore any errors.
 	}
 snippet for
-	for( x in it )
+	for( ${1:var} in ${2:iterator} )
 snippet class HAXE
 	class `expand('%:t:r')` {
 	
@@ -175,17 +175,56 @@ snippet resource_bytes_load
 	var loader = new Loader();
 	loader.contentLoaderInfo.addEvent(Event.COMPLETE, function (e:Dynamic){});
 	loader.loadBytes(haxe.Resource.getBytes("${1:name}"));
-snippet untyped
+snippet untyped_code
 	untyped{ ${1} }
+snippet php_code
+	__php__("php code")
+snippet php_call
+	untyped __call__("${1:func_name}", ${2:args ...} );
+snippet php_global_var
+	__var__(${1:_GET|_SERVER|_HOST}, ${2:key})
+snippet php_strict_equal
+	__physeq__(${1}, ${2})
+
+
 snippet enum
 	enum ${1:name} {
 		blue;
 		grey( v : Int );
 	}
 snippet flash_trace_to_log
-    haxe.Log.trace = function (v:Dynamic, ?infos: haxe.PosInfos ):Void{
-      var loc = (infos == null) ? "" : infos.fileName+" "+infos.lineNumber+" ";
-      flash.Lib.trace(loc+v);
-    }
+	haxe.Log.trace = function (v:Dynamic, ?infos: haxe.PosInfos ):Void{
+		var loc = (infos == null) ? "" : infos.fileName+" "+infos.lineNumber+" ";
+		flash.Lib.trace(loc+v);
+	}
 snippet get_host
 	ExternalInterface.call("window.location.href.match(/http:\\/\\/([^/]*)/)[1].toString",[])
+
+snippet class_db_object
+	class ${1:name} extends neko.db.Object {
+	
+		public var id:Int;
+		public var surname:String;
+		public var lastname:String;
+	
+	
+		public function new(arg) {
+		super(arg)
+		}
+	
+		static function main() {
+			trace("hello world");
+		}    
+	
+		// special fields:
+		static var manager : Neko.db.Manager = new neko.db.Manager<${1}>(${1})
+		static var PRIVATE_FIELDS = [ "xx", "yyy" ]; // not used by database
+		static var TABLE_NAME = "User"; // optional defaults to class name
+		static var local_manager: neko.db.Manager<neko.db.Object> // don't know yet
+		static var TABLE_IDS: Array<String> // ids to be used
+	
+	}
+
+snippet using
+	using StringTools;
+	using Lambda;

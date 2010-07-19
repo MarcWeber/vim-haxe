@@ -709,6 +709,15 @@ fun! haxe#CompileRHS(...)
     endif
   endif
 
+  if target[-3:] == "swf"
+    if target == "target-swf"
+      let args = actions#VerifyArgs(['haxe','-main',class, "-swf-version","10" ,"-swf9", class.'.swf'])
+      return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
+    elseif target == "run-php"
+      throw "not implemented"
+    endif
+  endif
+
   throw "target not implemented yet (TODO)"
 
 endfun
