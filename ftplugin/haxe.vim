@@ -18,3 +18,11 @@ endif
 call on_thing_handler#AddOnThingHandler('b', funcref#Function('haxe#gfHandler'))
 
 let b:match_words='#if:#else\>:#elif\>:#end\>'
+
+
+if !exists('did_import_mapping') && !exists('g:codefellow_no_import_mapping')
+  let did_import_mapping = 1
+  " note: codefellow is using something similar as well.
+  " So if you open a .hx file first you'll get the wrong import hook!
+  autocmd Filetype qf noremap <buffer> i :call<space>haxe#FindImportFromQuickFix()<cr>
+endif
