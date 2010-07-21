@@ -43,8 +43,26 @@ CONFIGURATION:
 TODO, get a list of options by:
 grep -r  vim_haxe .
 
+let g:vim_haxe_haxe_src_dir='directory' if you don't like the default
+PLUGIN_ROOT.'/haxe-src'
+
+ctags language support:
+~/.ctags:
+
+  --langdef=haxe
+  --langmap=haxe:.hx
+  --regex-haxe=/^[ \t]*[(private|public|static|override|inline|dynamic)( \t)]*function[ \t]+([A-Za-z0-9_]+)[ \t]*\(([^\{]*)/\1/f,function/
+  --regex-haxe=/^[ \t]*([private|public|static|protected|inline][ \t]?)+var[ \t]+([A-Za-z0-9_]+)/\2/v,variable/ 
+  --regex-haxe=/^[ \t]*package[ \t]*([A-Za-z0-9_]+)/\1/p,package/
+  --regex-haxe=/^[ \t]*class[ \t]([A-Za-z0-9]+)[ \t]*[^\{]*/\1/c,class/
+  --regex-haxe=/^[ \t]*interface[ \t]([A-Za-z0-9]+)[ \t]*[^\{]*/\1/i,interface/
+
+Vim will then automatically checkout haxe sources and tag the std .hx files for you
+
+TODO: also checkout flash sourecs automatiacally?
+
 _______________________________________________
-USAGE (QUICK AND DIRTY)
+uSAGE (QUICK AND DIRTY)
 
 To get completions: CTRL-X CTRL-O after a dot.
 

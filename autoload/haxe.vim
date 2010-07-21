@@ -269,6 +269,7 @@ endf
 fun! haxe#BuildHXMLPath()
   if !exists('g:haxe_build_hxml')
     let g:haxe_build_hxml=input('specify your build.hxml file. It should contain one haxe invokation only: ','','customlist,haxe#HXMLFilesCompletion')
+    call haxe#HXMLChanged()
   endif
   return g:haxe_build_hxml
 endf
@@ -689,6 +690,7 @@ fun! haxe#CompileRHS(...)
 
     if target == "target-neko"
       let args = actions#VerifyArgs(['haxe','-main',class,'-neko',nekoFile])
+      call s:tmpHxml(args)
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     elseif target == "run-neko"
       let args = actions#VerifyArgs(['neko',nekoFile])
@@ -702,6 +704,7 @@ fun! haxe#CompileRHS(...)
 
     if target == "target-php"
       let args = actions#VerifyArgs(['haxe','-main',class,'--php-front',phpFront,'-php', phpDir])
+      call s:tmpHxml(args)
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     elseif target == "run-php"
       let args = actions#VerifyArgs(['php',phpDir.'/'.phpFront])
@@ -712,6 +715,7 @@ fun! haxe#CompileRHS(...)
   if target[-3:] == "swf"
     if target == "target-swf"
       let args = actions#VerifyArgs(['haxe','-main',class, "-swf-version","10" ,"-swf9", class.'.swf'])
+      call s:tmpHxml(args)
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     elseif target == "run-php"
       throw "not implemented"
@@ -720,4 +724,61 @@ fun! haxe#CompileRHS(...)
 
   throw "target not implemented yet (TODO)"
 
+endfun
+
+" write tmp.hxml file to make completion work
+" yes - this isn't the nicest solution.
+fun! s:tmpHxml(args)
+  let f='tmp.hxml'
+  call writefile([a:args], f)
+  let g:haxe_build_hxml = f
+  call haxe#HXMLChanged()
+endf
+
+fun! haxe#HXMLChanged()
+  let words = split(haxe#BuildHXML()['ExtraCompletArgs'],'\s\+')
+  echo words
+  if index(words,"-swf-version") > 0
+    let subdir = "flash"
+  elseif index(words,"-swf9") > 0
+    let subdir = "flash9"
+  else
+    for i in ['cpp','php','neko']
+      if index(words,"-".i) > 0
+        let subdir = i
+        break
+      endif
+    endfor
+  endif
+
+  let std = haxe#HaxeSourceDir().'/std/'
+  let dirToTag = std.subdir
+  " TODO think about whether an existing ctaging library can be used?
+  if (!exists('g:vim_haxe_ctags_command_recursive'))
+    let g:vim_haxe_ctags_command_recursive = "ctags -R "
+  endif
+
+  call haxe#TagAndAdd(dirToTag,'.')
+  " StringTools, Lamba etc:
+  call haxe#TagAndAdd(std, '*.hx')
+
+  " TODO tag haxelib libraries!
+endf
+
+fun! haxe#TagAndAdd(d, pat)
+  call vcs_checkouts#ExecIndir([{'d': a:d, 'c': g:vim_haxe_ctags_command_recursive.' '.a:pat}])
+  exec 'set tags+='.a:d.'/tags'
+endf
+
+let s:root = fnamemodify(expand('<sfile>'),':h:h:h')
+fun! haxe#HaxeSourceDir()
+  let srcdir = exists('g:vim_haxe_haxe_src_dir') ? g:vim_haxe_haxe_src_dir : s:root.'/haxe-src'
+  if !isdirectory(srcdir.'/std')
+    if input('trying to checkout haxe-src into '.srcdir.'. ok ? [y/n]') == 'y'
+      call mkdir(srcdir,'p')
+      " checking out std ony would suffice. disk is cheap today..
+      call vcs_checkouts#Checkout(srcdir, {'type':'svn','url': 'http://haxe.googlecode.com/svn/trunk' })
+    endif
+  endif
+  return srcdir
 endfun
