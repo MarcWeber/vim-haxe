@@ -712,6 +712,24 @@ fun! haxe#CompileRHS(...)
     endif
   endif
 
+  if target[-2:] == "js"
+    let jsFront = class.".js"
+
+    if target == "target-js"
+      let args = actions#VerifyArgs(['haxe','-main',class, '--js-namespace', 'HaXeJS', '-js',jsFront])
+      call s:tmpHxml(args)
+      return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
+    elseif target == "run-js"
+      let args = actions#VerifyArgs(['js',jsFront])
+      return "call bg#RunQF(".string(args).", 'c', ".string("none").")"
+    elseif target == "run-rhino-js"
+      let args = actions#VerifyArgs(['rhino','-debug',jsFront])
+      let ef= 
+            \  '%*[\ \\t]at\ %f:%l'
+      return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
+    endif
+  endif
+
   if target[-3:] == "swf"
     if target == "target-swf"
       let args = actions#VerifyArgs(['haxe','-main',class, "-swf-version","10" ,"-swf9", class.'.swf'])
@@ -730,7 +748,7 @@ endfun
 " yes - this isn't the nicest solution.
 fun! s:tmpHxml(args)
   let f='tmp.hxml'
-  call writefile([a:args], f)
+  call writefile([join(a:args," ")], f)
   let g:haxe_build_hxml = f
   call haxe#HXMLChanged()
 endf
@@ -761,6 +779,9 @@ fun! haxe#HXMLChanged()
   call haxe#TagAndAdd(dirToTag,'.')
   " StringTools, Lamba etc:
   call haxe#TagAndAdd(std, '*.hx')
+
+  " Haxe extra classes
+  call haxe#TagAndAdd(std.'/haxe', '.')
 
   " TODO tag haxelib libraries!
 endf
