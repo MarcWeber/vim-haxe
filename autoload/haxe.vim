@@ -608,7 +608,7 @@ endf
 let s:classregex='interface\s\+'
 let s:packageregex='^package\s\+\([^\n\r ]*\)'
 
-let s:c['f_scan_as'] = get(s:c, 'f_scan_as', {'func': funcref#Function('haxe#ScanASFile'), 'version' : 1, 'use_file_cache' : 1} )
+let s:c['f_scan_as'] = get(s:c, 'f_scan_as', {'func': funcref#Function('haxe#ScanASFile'), 'version' : 3, 'use_file_cache' : 1} )
 " very simple .as / .hx 'parser'
 " It only stores function names, class names and the line numbers where those
 " functions occur. This way it can be used as tag replacement
@@ -622,8 +622,8 @@ fun! haxe#ScanASFile(filename)
 
   let regex = join([
     \ '\(interface\)\s\+\([^ ]*\)',
-    \ '\(class\)\s\+\([^{ ]*\)\%(\s\+extends\s\+\([^ ]*\)\)\?',
-    \ '^\(package\)\s\+\([^{(\n\r ]*\)',
+    \ '\(class\)\s\+\([^{ ]*\)\%(\s\+extends\s\+\([^ <]*\)\)\?',
+    \ '^\(package\)\s\+\([^{(\n\r ;]*\)',
     \ '\(function\)\s\+\([^{(\n\r ]*\)'
     \ ], '\|')
 
@@ -690,7 +690,7 @@ fun! haxe#CompileRHS(...)
 
     if target == "target-neko"
       let args = actions#VerifyArgs(['haxe','-main',class,'-neko',nekoFile])
-      call s:tmpHxml(args)
+      call s:tmpHxml(args[1:])
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     elseif target == "run-neko"
       let args = actions#VerifyArgs(['neko',nekoFile])
@@ -704,7 +704,7 @@ fun! haxe#CompileRHS(...)
 
     if target == "target-php"
       let args = actions#VerifyArgs(['haxe','-main',class,'--php-front',phpFront,'-php', phpDir])
-      call s:tmpHxml(args)
+      call s:tmpHxml(args[1:])
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     elseif target == "run-php"
       let args = actions#VerifyArgs(['php',phpDir.'/'.phpFront])
@@ -717,7 +717,7 @@ fun! haxe#CompileRHS(...)
 
     if target == "target-js"
       let args = actions#VerifyArgs(['haxe','-main',class, '--js-namespace', 'HaXeJS', '-js',jsFront])
-      call s:tmpHxml(args)
+      call s:tmpHxml(args[1:])
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     elseif target == "run-js"
       let args = actions#VerifyArgs(['js',jsFront])
@@ -733,7 +733,7 @@ fun! haxe#CompileRHS(...)
   if target[-3:] == "swf"
     if target == "target-swf"
       let args = actions#VerifyArgs(['haxe','-main',class, "-swf-version","10" ,"-swf9", class.'.swf'])
-      call s:tmpHxml(args)
+      call s:tmpHxml(args[1:])
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     elseif target == "run-php"
       throw "not implemented"
@@ -803,3 +803,30 @@ fun! haxe#HaxeSourceDir()
   endif
   return srcdir
 endfun
+
+" create
+" Dummy.hx (importing everything found in the current directory)
+" dummy_php.hxml
+" dummy_.. .hxml
+"
+" By compiling Dummy.hxml you can type check everything easily
+"
+" experimental code
+fun! haxe#CreateDummyFiles()
+  let imports = {}
+  for f in split(glob("**/*.hx"),"\n")
+    let info = cached_file_contents#CachedFileContents(f, s:c['f_scan_as'])
+    if has_key(info, 'class') && has_key(info, 'package')
+      let imports[info['package'].'.'.info['class']] = 1
+    endif
+  endfor
+  let contents =
+        \ join(map(keys(imports),'"import ".v:val."\n"'),"")
+        \ . "class Dummy {"
+        \ . "\n"
+        \ . "  static function main() {\n"
+        \ . "  }\n"
+        \ . "}\n"
+  call writefile(split(contents,"\n"), 'Dummy.hx')
+  call writefile(["-neko neko -main Dummy"] ,'dummy_neko.hxml')
+endf

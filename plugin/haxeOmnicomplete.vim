@@ -60,6 +60,7 @@ command! -nargs=1 GotoThing :call haxe#GotoThing('',<q-args>)
 command! -nargs=1 GotoThingRegex :call haxe#GotoThing('regex', <f-args>)
 command! -nargs=1 ParentsOfObject :echo join(haxe#ClassInfo(<f-args>)["hirarchy"]," > ")
 command! -nargs=1 -complete=file HaxeSetBuildXML call haxe#SetBuildXml(<q-args>)<cr>
+command! -nargs=0 CreateDummyFiles call haxe#CreateDummyFiles()
 
 call actions#AddAction('run haxe compiler (hxml)', {'action': funcref#Function('haxe#CompileRHS')})
 for target in ["neko","cpp","php","swf","js"]
