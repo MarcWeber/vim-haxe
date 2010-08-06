@@ -383,26 +383,13 @@ fun! haxe#FindImportFromQuickFix()
   else
     let solution = solutions[0]
   endif
-  exec "normal \<cr>G"
+  exec "normal \<cr>"
 
-  let line = search('^\s*import\s*'.solution,'cwb')
-  if line != 0
-    wincmd p
-    echo "class is imported at line :".line." - nothing to be done"
-    return
-  endif
-
-  if search('^\s*import','cwb') == 0
-    " no import found, add above (first line)
-    let a = "ggO"
-  else
-    " one import found, add below
-    let a = "o"
-  endif
-  exec "normal ".a."import ".solution.";\<esc>"
+  call haxe#DoImport(solution)
   wincmd p
   silent! cnext
 endf
+
 
 fun! haxe#AddCamelCaseNames(list)
   for i in copy(a:list)
@@ -829,4 +816,70 @@ fun! haxe#CreateDummyFiles()
         \ . "}\n"
   call writefile(split(contents,"\n"), 'Dummy.hx')
   call writefile(["-neko neko -main Dummy"] ,'dummy_neko.hxml')
+endf
+
+
+" second (fast) implementation of adding imports based on tags {{{1
+
+fun! haxe#AddImportFromQuickfix() abort
+
+  let list = getqflist()
+
+  let did_thing = {}
+
+  for item in list
+
+    let thing = matchstr(item.text, 'Class not found : \zs.*\|Unknown identifier : \zs.*\|The definition of base class \zs[^ ]*\ze was not found')
+
+    if thing == "" || has_key(did_thing, thing)
+      continue
+    endif
+
+    " open file
+    exec 'b '.item.bufnr
+
+    " add import
+    call haxe#AddImport(thing)
+
+    " back to quickfix, select next error
+    wincmd p
+    silent! cnext
+
+    let did_thing[thing] = 1
+  endfor
+
+endf
+
+fun! haxe#AddImport(thing)
+  let possiblePackages = []
+  let sep = ' | ' 
+  for t in taglist('^'.a:thing.'$')
+    if t.filename =~ '\%(.hx\|.AS\)$'
+      let scanned = cached_file_contents#CachedFileContents(t.filename, s:c['f_scan_as'])
+      call add(possiblePackages, has_key(scanned, 'package') ? scanned.package : fnamemodify(t.filename,':t:r') .sep.t.filename)
+    endif
+  endfor
+  let package = tlib#input#List("s","chose package to import '".a:thing."' from: ", possiblePackages)
+  call haxe#DoImport(split(package, sep)[0])
+endf
+
+fun! haxe#DoImport(package)
+  let solution = a:package
+  normal "G"
+
+  let line = search('^\s*import\s*'.solution,'cwb')
+  if line != 0
+    wincmd p
+    echo "class is imported at line :".line." - nothing to be done"
+    return
+  endif
+
+  if search('^\s*import','cwb') == 0
+    " no import found, add above (first line)
+    let a = "ggO"
+  else
+    " one import found, add below
+    let a = "o"
+  endif
+  exec "normal ".a."import ".solution.";\<esc>"
 endf
