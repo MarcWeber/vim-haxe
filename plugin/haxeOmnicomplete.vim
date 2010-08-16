@@ -52,6 +52,9 @@ if !exists('g:vim_haxe_no_filetype')
     " This is executed multiple times - don't know how to fix it
     " AddOnThingHandler contains Uniq(..)
     autocmd BufRead,BufEnter vim_view_fun://['haxe#ClassView* call on_thing_handler#AddOnThingHandler('b',funcref#Function('haxe#gfHandler'))
+
+    " see zipPlugin.vim ($VIMRUNTIME)
+    au BufReadCmd   *.swc		call zip#Browse(expand("<amatch>"))
   augroup end
 endif
 

@@ -51,11 +51,14 @@ ctags language support:
 
   --langdef=haxe
   --langmap=haxe:.hx
+  --regex-haxe=/^package[ \t]+([A-Za-z0-9_.]+)/\1/p,package/
   --regex-haxe=/^[ \t]*[(private|public|static|override|inline|dynamic)( \t)]*function[ \t]+([A-Za-z0-9_]+)[ \t]*\(([^\{]*)/\1/f,function/
   --regex-haxe=/^[ \t]*([private|public|static|protected|inline][ \t]?)+var[ \t]+([A-Za-z0-9_]+)/\2/v,variable/ 
   --regex-haxe=/^[ \t]*package[ \t]*([A-Za-z0-9_]+)/\1/p,package/
-  --regex-haxe=/^[ \t]*class[ \t]([A-Za-z0-9]+)[ \t]*[^\{]*/\1/c,class/
-  --regex-haxe=/^[ \t]*interface[ \t]([A-Za-z0-9]+)[ \t]*[^\{]*/\1/i,interface/
+  --regex-haxe=/^[ \t]*class[ \t]([A-Za-z0-9_]+)[ \t]*[^\{]*/\1/c,class/
+  --regex-haxe=/^[ \t]*(extern[ \t]+)interface[ \t]+([A-Za-z0-9_]+)[ \t]*[^\{]*/\2/i,interface/
+  --regex-haxe=/^[ \t]*typedef[ \t]+([A-Za-z0-9_]+)/\1/t,typedef/
+  --regex-haxe=/^[ \t]*enum[ \t]+([A-Za-z0-9_]+)/\1/t,typedef/
 
 Vim will then automatically checkout haxe sources and tag the std .hx files for you
 
