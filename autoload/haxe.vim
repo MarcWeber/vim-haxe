@@ -842,6 +842,12 @@ fun! haxe#HXMLChanged()
   if v != ""
     call haxe#TagAndAdd(haxe#FlashSourcesByVersion(v),'.')
   endif
+
+  " tag -cp sources
+  for cp in parsed['cps']
+    call haxe#TagAndAdd(cp,'.')
+  endfor
+
 endf
 
 " TODO refactor, shared by vim-addon-ocaml ?
