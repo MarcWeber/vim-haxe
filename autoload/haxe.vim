@@ -33,6 +33,41 @@ fun! haxe#TmpDir()
   return g:vim_haxe_tmp_dir
 endf
 
+" add var of current function to complete list
+" This should be implemented in HaXe - but it takes me no time doing it in
+" VimL
+fun! haxe#AddLocalVars(regex, additional_regex)
+  let lidx = line('.')
+  let r = []
+  while lidx > 0
+    let l = getline(lidx)
+    if l =~ 'function'
+      " break
+      for x in r | call complete_add(x) | endfor
+      return
+    endif
+    " join lines by " " until ; is found
+    if l =~ '^\s*var\>'
+      let i = lidx
+      let conc = ''
+      while l !~ ';' && i < line('.')
+        let conc .= l
+        let i+=1
+        let l = getline(i)
+      endwhile
+      let conc .= " ".l
+      let without_var = matchstr(conc, '^\s*var\>\s*\zs[^;]*')
+      for var in split(without_var,',\s*')
+        let v = matchstr(var, '\zs[^;: \t]*')
+        if v =~ a:regex || (a:additional_regex != "" && v =~ a:additional_regex)
+          call add(r, {'word': v, 'menu': 'local var in function'})
+        endif
+      endfor
+    endif
+    let lidx = lidx -1
+  endwhile
+endf
+
 " HAXE executable completion function {{{1
 
 " completes using haxe compiler
@@ -53,6 +88,8 @@ fun! haxe#CompleteHAXEFun(line, col, base, ...)
           \ , "vim_dev_plugin_completion_func", {'match_beginning_of_string': 0})
     let additional_regex = get(patterns, 'vim_regex', "")
   endif
+
+  call haxe#AddLocalVars(a:base, additional_regex)
 
   " Start constructing the command for haxe
   " The classname will be based on the current filename
