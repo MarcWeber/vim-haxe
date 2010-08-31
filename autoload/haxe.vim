@@ -171,7 +171,7 @@ fun! haxe#CompleteHAXEFun(line, col, base, ...)
       if len(element) == 1 " Means we only got a package class name
         let dicTmp={'word': element[0]}
       else " Its a method name
-        let dicTmp={'word': element[0], 'menu': element[1] }
+        let dicTmp={'word': element[0], 'menu': element[1], 'info': element[1] }
         if element[1] == "Void -> Void"
           " function does not expect arguments
           let dicTmp["word"] .= "()"
