@@ -812,13 +812,13 @@ fun! haxe#HXMLChanged()
   let parsed = haxe#BuildHXML()
   let words = split(parsed['ExtraCompletArgs'],'\s\+')
   echo words
-  if index(words,"-swf-version") > 0
+  if index(words,"-swf-version") >= 0
     let subdir = "flash"
-  elseif index(words,"-swf9") > 0
+  elseif index(words,"-swf9") >= 0
     let subdir = "flash9"
   else
     for i in ['cpp','php','neko']
-      if index(words,"-".i) > 0
+      if index(words,"-".i) >= 0
         let subdir = i
         break
       endif
