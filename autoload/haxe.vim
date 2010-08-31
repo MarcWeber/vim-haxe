@@ -62,24 +62,27 @@ fun! haxe#CompleteHAXEFun(line, col, base, ...)
 
   let tmpDir = haxe#TmpDir()
 
-  " somehow haxe can't parse the file if trailing ) or such appear
-  " Thus truncate the file at the location where completion starts
-  " This also means that error locations must be rewritten
-  let tmpFilename = tmpDir.'/'.expand('%:t')
-  let g:tmpFilename = tmpFilename
-
   let linesTillC = getline(1, a:line-1)+[getline('.')[:(a:col-1)]]
   " hacky: remove package name. This way the file doesn't have to be put into
   " subdirectories
   let lines = map(linesTillC, 'v:val =~ '.string('^package\s\+').' ? "" : v:val')
-  call writefile( lines
-        \ , tmpFilename)
+  let [b,eof] = [&binary, &endofline]
+  set binary
+  set noendofline
+
+  " don't trigger vim-addon-action actions on buf write
+  let g:prevent_action = 1
+  w
+  let g:prevent_action = 0
+  " set old settings
+  exec 'set '.(b?'':'no').'binary'
+  exec 'set '.(eof?'':'no').'endofline'
 
   let bytePos = len(join(lines,"\n"))
   
   " Construction of the base command line
   let d = haxe#BuildHXML()
-  let strCmd="haxe --no-output -main " . classname . " " . substitute(d['ExtraCompletArgs'],'-main\s\+[^ ]*','',''). " --display " . '"' . tmpFilename . '"' . "@" . bytePos . " -cp " . '"' . expand("%:p:h") . '" -cp "'.tmpDir.'"'
+  let strCmd="haxe --no-output -main " . classname . " " . substitute(d['ExtraCompletArgs'],'-main\s\+[^ ]*','',''). " --display " . '"' . expand('%') . '"' . "@" . bytePos
 
   try
     let dolstErrors = 0
@@ -89,7 +92,6 @@ fun! haxe#CompleteHAXEFun(line, col, base, ...)
     let res=system(strCmd.' 2>&1')
 
     let g:res = res
-    "call delete(tmpFilename)
     if v:shell_error != 0
       " HaXe still returns completions. However there may be errors
       " So do both: show errors and completions
@@ -147,7 +149,7 @@ fun! haxe#CompleteHAXEFun(line, col, base, ...)
   endtry
 
   if dolstErrors
-    let lstErrors = split(substitute(res, tmpFilename, expand('%'),'g'),"\n")
+    let lstErrors = split(res,"\n")
     if !exists("s:haxeErrorFile")
       let s:haxeErrorFile = tempname()
     endif
@@ -340,6 +342,9 @@ fun! haxe#ParseArgs(s)
 endf
 
 fun! haxe#FindLib(name)
+  return system('haxelib path '.a:name)
+
+  " alternative VimL implementation
   let dir = readfile($HOME."/.haxelib",'b')[0]
   if (!isdirectory(dir))
     throw "Can't find haxelib directory "+dir
