@@ -342,7 +342,7 @@ fun! haxe#ParseArgs(s)
 endf
 
 fun! haxe#FindLib(name)
-  return system('haxelib path '.a:name)
+  return split(system('haxelib path '.a:name),"\n")[0]
 
   " alternative VimL implementation
   let dir = readfile($HOME."/.haxelib",'b')[0]
@@ -858,7 +858,7 @@ endf
 " TODO refactor, shared by vim-addon-ocaml ?
 fun! haxe#TagAndAdd(d, pat)
   call vcs_checkouts#ExecIndir([{'d': a:d, 'c': g:vim_haxe_ctags_command_recursive.' '.a:pat}])
-  exec 'set tags+='.a:d.'/tags'
+  exec 'set tags+='.substitute(a:d,',','\\\\,','g').'/tags'
 endf
 
 fun! haxe#HaxeSourceDir()
