@@ -60,7 +60,7 @@ fun! haxe#AddLocalVars(regex, additional_regex)
       for var in split(without_var,',\s*')
         let v = matchstr(var, '\zs[^;: \t]*')
         if v =~ a:regex || (a:additional_regex != "" && v =~ a:additional_regex)
-          call add(r, {'word': v, 'menu': 'local var in function'})
+          call add(r, {'word': v, 'menu': 'var in func '.matchstr(var,'^[^;: \t]*\zs.*')})
         endif
       endfor
     endif
