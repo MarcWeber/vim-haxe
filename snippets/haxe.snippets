@@ -229,7 +229,7 @@ snippet using
 	using StringTools;
 	using Lambda;
 snippet writeFile
-		function writeFile(path, lines:Array<String>){
+		static function writeFile(path, lines:Array<String>){
 			var f =neko.io.File.write(path, true);
 			for (s in lines) f.writeString(s+"\n");
 			f.close();

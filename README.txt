@@ -1,19 +1,3 @@
-haxeOmnicomplete vim plugin README
-
-Hello people!
-
-This is my first try at giving something back to the comunity, 
-so please bear with my errors!
-
-This plugin enables the use of omnicomplete in haxe files 
-in vim. After a dot you press CTRL-X CTRL-O (your custom 
-mappings could have changed those bindings) and this
-plugin will call the haxe compiler and return a list of
-the methods and properties of the word before the dot.
-You can navigate the list with CTRL-N and CTRL-P.
-It that word has no properties nor methods, nothing will be
-returned. Simple, huh?
-
 _______________________________________________
 INSTALLATION
 
@@ -25,18 +9,21 @@ call scriptmanager#Activate(["vim-haxe"])
 Then add to your .vimrc:
 call scriptmanager#Activate(["vim-haxe"])
 
-Use <c-x><c-o> to get completion
+Use <c-x><c-o> to get completion (based on HaXe)
+  Example: this. -> this.addChild(
+
+Use <c-x><c-u> to get completion (based on tags. This completes both: class
+                                  names and functions)
+
+  Example: gC -> haxe.io.File.getContents(
+
 Use <c-l> to define a local command
 
 place cursor on error line in Quikfix Window then type i to add a missing flash
 import
 
-You should svn checkout http://flashdevelop.googlecode.com/svn/trunk
-and set in your .vimrc:
-
-  let g:vim_haxe = {}
-  let g:vim_haxe['flash_develop_checkout'] = '~/path-to/flashdevelop_trunk'
-
+vim-haxe will ask you to checkout sources for both:
+haxe and flash_develop lazily.
 _______________________________________________
 CONFIGURATION:
 
@@ -52,7 +39,7 @@ ctags language support:
   --langdef=haxe
   --langmap=haxe:.hx
   --regex-haxe=/^package[ \t]+([A-Za-z0-9_.]+)/\1/p,package/
-  --regex-haxe=/^[ \t]*[(private|public|static|override|inline|dynamic)( \t)]*function[ \t]+([A-Za-z0-9_]+)[ \t]*\(([^\{]*)/\1/f,function/
+  --regex-haxe=/^[ \t]*[(private|public|static|override|inline|dynamic)( \t)]*function[ \t]+([A-Za-z0-9_]+)/\1/f,function/
   --regex-haxe=/^[ \t]*([private|public|static|protected|inline][ \t]*)+var[ \t]+([A-Za-z0-9_]+)/\2/v,variable/ 
   --regex-haxe=/^[ \t]*package[ \t]*([A-Za-z0-9_]+)/\1/p,package/
   --regex-haxe=/^[ \t]*(extern[ \t]+)?class[ \t]+([A-Za-z0-9_]+)[ \t]*[^\{]*/\2/c,class/
@@ -60,71 +47,44 @@ ctags language support:
   --regex-haxe=/^[ \t]*typedef[ \t]+([A-Za-z0-9_]+)/\1/t,typedef/
   --regex-haxe=/^[ \t]*enum[ \t]+([A-Za-z0-9_]+)/\1/t,typedef/
 
+
 Vim will then automatically checkout haxe sources and tag the std .hx files for you
 
-TODO: also checkout flash sourecs automatiacally?
-
-_______________________________________________
-uSAGE (QUICK AND DIRTY)
-
-To get completions: CTRL-X CTRL-O after a dot.
-
-To add classpaths: call HaxeAddClasspath() or <LocalLeader>p
-
-To add a haxelib: call HaxeAddLibs() or <LocalLeader>l
-
-To navigate to errors: use vim quickfix commands.
-
-_______________________________________________
 EXPLANATION
 
-Of course, using the compiler has its cons. If you have
-syntax or other kind of errors in you code, the omnicompletion
-will not work and an exception will be raised. I have managed
-a simplistic error handling that will fill the errors in the
-buffer errorfile (this will create a new temporary file) so
-you can navigate easily to them using the quickfix commands.
-(:cl, cfirst, cnext, etc...).
 
-Also, if your hx file uses classes that are not available, 
-you must declare them by calling HaxeAddClasspath(). This
-is conveniently mapped to <LocalLeader>p (by default \p).
-You will get a prompt asking for a path. You must provide the
-full path to the other classes files, without the last slash.
-Those paths will be appended to the comand line calling the
-compiler using -cp flags.
+-----------------------------------------------------------------------
+QUICKFIX DETAILS:
 
-If you use haxelib libs, you must also declare them by
-calling HaxeAddLib(), this one mapped to <LocalLeader>l
-(again, usually \l). You will get a prompt asking for the
-name of the lib, for example hxJSON, (great lib BD!).
-Those libs will be appended to the command line calling the
-compiler using -lib flags.
+See vim-addon-actions. (Eg use :ActionOnBufWrite or <s-f2> to assign an action such as
+compile to 
+  -js
+  -neko
+  -cpp
+  -php
+(this will create a tmp.hxml file)
 
-The haxeLibs and haxeClasspath variables holding that
-data are declared as buffer variables, so you must 
-declare them for each hx you are editing. This can be 
-royal pain, so you can set g:globalHaxeLibs and
-g:globalHaxeClasspath in your vimrc file to declare
-a list of paths and libraries to use for all you haxe
-files. For example, to set a list of classpaths for your
-hx's files you write this in your vimrc:
+compile using hxml (you'll be asked for the .hxml file). Use tab completion to
+select the one you want to work with.
 
-let g:globalHaxeClasspath = ['C:\Path\to\some\dir\with\classes','C:\Another\path']
+Additional notes:
+This VimL lib also contains a very basic .hx file parser. At the beginning I
+based some of the completions on it. But it was too slow. Using tagfiles and
+HaXe only now. Its still used to get the package name.
 
-and for the libs:
+-----------------------------------------------------------------------
+original: haxeOmnicomplete vim plugin README
 
-let g:globalHaxeLibs = ['hxJSON','otherLib']
+Hello people!
 
-Note that this variables must be declared as vim Lists,
-so even if you only add one element, you must use 
-the square brackets syntax.
+This is my first try at giving something back to the comunity, 
+so please bear with my errors!
 
-Note also that this variables must be declared BEFORE
-the sourcing of the plugin in your vimrc.
-
-_______________________________________________
-BUGS
-
-None so far, but they will surface!
-
+This plugin enables the use of omnicomplete in haxe files 
+in vim. After a dot you press CTRL-X CTRL-O (your custom 
+mappings could have changed those bindings) and this
+plugin will call the haxe compiler and return a list of
+the methods and properties of the word before the dot.
+You can navigate the list with CTRL-N and CTRL-P.
+It that word has no properties nor methods, nothing will be
+returned. Simple, huh?
