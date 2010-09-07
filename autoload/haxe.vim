@@ -17,7 +17,12 @@ fun! haxe#LineTillCursor()
   return getline('.')[:col('.')-2]
 endf
 fun! haxe#CursorPositions()
-  let line_till_completion = substitute(haxe#LineTillCursor(),'[^.: \t()]*$','','')
+  let l = haxe#LineTillCursor()
+  let line_till_completion = substitute(l,'[^.: \t()]*$','','')
+  let b:char_before_completion = ''
+  if len(line_till_completion) > 0
+    let b:char_before_completion = line_till_completion[-1:]
+  endif
   let chars_in_line = strlen(line_till_completion)
 
   " haxePos: byte position 
@@ -37,6 +42,9 @@ endf
 " This should be implemented in HaXe - but it takes me no time doing it in
 " VimL
 fun! haxe#AddLocalVars(regex, additional_regex)
+  if b:char_before_completion == '.'
+    return
+  endif
   let lidx = line('.')
   let r = []
   while lidx > 0
