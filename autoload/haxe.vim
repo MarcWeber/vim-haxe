@@ -378,7 +378,7 @@ endf
 " extract flash version from build.hxml
 let s:c['f_scan_hxml'] = get(s:c, 'f_scan_hxml', {'func': funcref#Function('haxe#ParseHXML'), 'version' : 3} )
 fun! haxe#ParseHXML(filename)
-  let contents = join(readfile(a:filename), " ")
+  let contents = join(map(readfile(a:filename),'substitute(v:val, '.string('#.*').',"","g")'), " ")
   return haxe#ParseArgs(contents)
 endf
 
@@ -1059,10 +1059,10 @@ endf
 fun! haxe#NekoTraceToHaXe(...)
   let cmd = a:0 > 0 ? 'cfile '.fnameescape(a:1) : 'cbuffer'
   set efm=Called\ from\ %f\ line\ %l
-  let l = getqflist()
-  let changed = 0
   exec cmd
   " try to find files
+  let l = getqflist()
+  let changed = 0
   for idx in range(0, len(l)-1)
     let i = l[idx]
     if i.valid
@@ -1076,7 +1076,6 @@ fun! haxe#NekoTraceToHaXe(...)
 
           " try to find class by tagfiles
           let class = matchstr(filename,'[^.:]\+\ze:')
-          echoe class
 
           for tag in taglist('^'.class.'$')
             if tag.kind == 'c'
@@ -1088,8 +1087,8 @@ fun! haxe#NekoTraceToHaXe(...)
           endfor
         else
           " assume file can be found in a subdir
-          let list = split(glob('**/'.i.filename),"\n")
-          if len(list) > 1
+          let list = split(glob('**/'. filename),"\n")
+          if len(list) >= 1
             let i.filename = list[0] | let changed = 1
             unlet i.bufnr
           endif
