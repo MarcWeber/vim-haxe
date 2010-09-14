@@ -87,3 +87,5 @@ fun! s:RegisterCompletions()
 endf
 
 call s:RegisterCompletions()
+
+command! -nargs=* NekoTraceToHaxe call haxe#NekoTraceToHaXe(<f-args>)

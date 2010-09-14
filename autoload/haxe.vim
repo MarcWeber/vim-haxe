@@ -1055,3 +1055,50 @@ fun! haxe#DoImport(package)
   endif
   exec "normal ".a."import ".solution.";\<esc>"
 endf
+
+fun! haxe#NekoTraceToHaXe(...)
+  let cmd = a:0 > 0 ? 'cfile '.fnameescape(a:1) : 'cbuffer'
+  set efm=Called\ from\ %f\ line\ %l
+  let l = getqflist()
+  let changed = 0
+  exec cmd
+  " try to find files
+  for idx in range(0, len(l)-1)
+    let i = l[idx]
+    if i.valid
+      let filename = bufname(i.bufnr)
+      if !filereadable(filename)
+        " try to find the file
+        " was -debug used?
+        if filename =~ '::' 
+          " match a line like this:
+          "Called from haxed.ClientMain::main line 178
+
+          " try to find class by tagfiles
+          let class = matchstr(filename,'[^.:]\+\ze:')
+          echoe class
+
+          for tag in taglist('^'.class.'$')
+            if tag.kind == 'c'
+              let i.filename = tag.filename | let changed = 1
+              let i.text = filename
+              unlet i.bufnr
+              break
+            endif
+          endfor
+        else
+          " assume file can be found in a subdir
+          let list = split(glob('**/'.i.filename),"\n")
+          if len(list) > 1
+            let i.filename = list[0] | let changed = 1
+            unlet i.bufnr
+          endif
+        endif
+      endif
+    endif
+    let l[idx] = i
+  endfor
+  if changed
+    call setqflist(l)
+  endif
+endf
