@@ -498,6 +498,7 @@ fun! haxe#ScannedFiles()
 endfun
 
 fun! haxe#FindImportFromQuickFix()
+  throw "outdated - use faster haxe#AddImportFromQuickfix()"
   let class = matchstr(getline('.'), 'Class not found : \zs.*\|Unknown identifier : \zs.*\|The definition of base class \zs[^ ]*\ze was not found')
 
   let solutions = []
@@ -509,8 +510,8 @@ fun! haxe#FindImportFromQuickFix()
         " parsing files can be slow (because vim regex is slow) so cache result
         let scanned = cached_file_contents#CachedFileContents(file,
           \ s:c['f_scan_as'], d['cachable'])
-        if (  (has_key(scanned,'classes') && has_key(scanned.classes, class)
-          \  || (has_key(scanned,'interfaces') && has_key(scanned.interfaces, class)
+        if (  (has_key(scanned,'classes') && has_key(scanned.classes, class))
+          \  || (has_key(scanned,'interfaces') && has_key(scanned.interfaces, class))
           \ ) && has_key(scanned,'package')
           call add(solutions, scanned['package'].'.'.class)
         endif
@@ -743,7 +744,7 @@ endf
 let s:classregex='interface\s\+'
 let s:packageregex='^package\s\+\([^\n\r ]*\)'
 
-let s:c['f_scan_as'] = get(s:c, 'f_scan_as', {'func': funcref#Function('haxe#ScanASFile'), 'version' : 5, 'use_file_cache' : 1} )
+let s:c['f_scan_as'] = get(s:c, 'f_scan_as', {'func': funcref#Function('haxe#ScanASFile'), 'version' : 6, 'use_file_cache' : 1} )
 " very simple .as / .hx 'parser'
 " It only stores function names, class names and the line numbers where those
 " functions occur. This way it can be used as tag replacement
@@ -761,6 +762,7 @@ fun! haxe#ScanASFile(filename)
   " HaXe allows multiple.
   let d = {
         \ 'classes': {},
+        \ 'interfaces': {},
         \ 'functions' : {},
         \ 'consts' : {}
         \ }
@@ -778,6 +780,7 @@ fun! haxe#ScanASFile(filename)
     if line =~ regex_class
       let m = matchlist(line, regex_class)
       let class_name = m[1]
+      if class_name == "" | continue | endif
       let current = {'type': 'class', 'name': class_name, 'extends' : m[2], 'functions' : {} }
       let d.classes[class_name] = current
       continue
@@ -797,6 +800,7 @@ fun! haxe#ScanASFile(filename)
       if exists('current.functions')
         let m = matchlist(line, regex_function)
         let fun_name = m[1]
+        if fun_name == "" | continue | endif
         let current.functions[fun_name] = { 'line_nr': nr, 'name' : fun_name, 'line' : line }
       endif
       continue
