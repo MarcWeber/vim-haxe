@@ -743,7 +743,7 @@ endf
 let s:classregex='interface\s\+'
 let s:packageregex='^package\s\+\([^\n\r ]*\)'
 
-let s:c['f_scan_as'] = get(s:c, 'f_scan_as', {'func': funcref#Function('haxe#ScanASFile'), 'version' : 4, 'use_file_cache' : 1} )
+let s:c['f_scan_as'] = get(s:c, 'f_scan_as', {'func': funcref#Function('haxe#ScanASFile'), 'version' : 5, 'use_file_cache' : 1} )
 " very simple .as / .hx 'parser'
 " It only stores function names, class names and the line numbers where those
 " functions occur. This way it can be used as tag replacement
@@ -751,8 +751,8 @@ fun! haxe#ScanASFile(filename)
   " TODO finish rewriting, add enum support ...
   let file_lines = readfile(a:filename)
 
-  let regex_interface = '\(interface\)\s\+\([^ ]*\)'
-  let regex_class = '\(class\)\s\+\([^{ ]*\)\%(\s\+extends\s\+\([^ <]*\)\)\?'
+  let regex_interface = '\%(interface\)\s\+\([^ ]*\)'
+  let regex_class = '\%(class\)\s\+\([^{ ]*\)\%(\s\+extends\s\+\([^ <]*\)\)\?'
   let regex_package = '^\%(package\)\s\+\([^{(\n\r ;]*\)'
   let regex_function = '\%(function\)\s\+\([^{(\n\r ]*\)'
   let regex_enum = '^\s*enum\s\+\(\S\+\)'
@@ -777,11 +777,21 @@ fun! haxe#ScanASFile(filename)
 
     if line =~ regex_class
       let m = matchlist(line, regex_class)
-      let class_name = m[2]
+      let class_name = m[1]
       let current = {'type': 'class', 'name': class_name, 'extends' : m[2], 'functions' : {} }
       let d.classes[class_name] = current
       continue
     endif
+
+
+    if line =~ regex_interface
+      let m = matchlist(line, regex_interface)
+      let interface_name = m[1]
+      let current = {'type': 'interface', 'name': interface_name, 'extends' : m[2], 'functions' : {} }
+      let d.interfaces[interface_name] = current
+      continue
+    endif
+
 
     if line =~ regex_function
       if exists('current.functions')
