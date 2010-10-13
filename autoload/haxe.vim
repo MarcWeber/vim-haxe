@@ -958,7 +958,7 @@ fun! haxe#HXMLChanged()
   elseif index(words,"-swf-version") >= 0
     let subdir = "flash"
   else
-    for i in ['cpp','php','neko']
+    for i in ['cpp','php','neko','js']
       if index(words,"-".i) >= 0
         let subdir = i
         break
