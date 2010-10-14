@@ -13,6 +13,9 @@ let s:c['flash_develop_checkout'] = get(s:c, 'flash_develop_checkout', s:root.'/
 let s:c['local_name_expr'] = get(s:c, 'local_name_expr', 'tlib#input#List("s","select local name", names)')
 let s:c['browser'] = get(s:c, 'browser', 'Browse %URL%')
 
+
+let s:regex_package = '^\%(package\)\s\+\([^{(\n\r ;]*\)'
+
 fun! haxe#LineTillCursor()
   return getline('.')[:col('.')-2]
 endf
@@ -110,24 +113,29 @@ fun! haxe#CompleteHAXEFun(line, col, base, ...)
   let linesTillC = getline(1, a:line-1)+[getline('.')[:(a:col-1)]]
   " hacky: remove package name. This way the file doesn't have to be put into
   " subdirectories
-  let lines = map(linesTillC, 'v:val =~ '.string('^package\s\+').' ? "" : v:val')
   let [b,eof] = [&binary, &endofline]
   set binary
   set noendofline
 
   " don't trigger vim-addon-action actions on buf write
   let g:prevent_action = 1
-  w
+  silent w!
   let g:prevent_action = 0
   " set old settings
   exec 'set '.(b?'':'no').'binary'
   exec 'set '.(eof?'':'no').'endofline'
 
-  let bytePos = len(join(lines,"\n"))
+  let bytePos = len(join(linesTillC,"\n"))
   
   " Construction of the base command line
   let d = haxe#BuildHXML()
-  let strCmd="haxe --no-output -main " . classname . " " . substitute(d['ExtraCompletArgs'],'-main\s\+[^ ]*','',''). " --display " . '"' . expand('%') . '"' . "@" . bytePos
+  let list = matchlist(getline(search(s:regex_package, 'bn')), s:regex_package)
+  let package =
+        \ len(list) > 1
+        \ ? list[1].'.'
+        \ : ""
+
+  let strCmd="haxe --no-output -main " . package.classname . " " . substitute(d['ExtraCompletArgs'],'-main\s\+[^ ]*','',''). " --display " . '"' . expand('%') . '"' . "@" . bytePos
 
   try
     let dolstErrors = 0
@@ -754,7 +762,7 @@ fun! haxe#ScanASFile(filename)
 
   let regex_interface = '\%(interface\)\s\+\([^ ]*\)'
   let regex_class = '\%(class\)\s\+\([^{ ]*\)\%(\s\+extends\s\+\([^ <]*\)\)\?'
-  let regex_package = '^\%(package\)\s\+\([^{(\n\r ;]*\)'
+  let regex_package = s:regex_package
   let regex_function = '\%(function\)\s\+\([^{(\n\r ]*\)'
   let regex_enum = '^\s*enum\s\+\(\S\+\)'
 
