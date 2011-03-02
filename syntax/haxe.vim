@@ -64,7 +64,7 @@ if g:vim_haxe_syntax_scheme_nr == 1
   syn match   haxeClassDecl       "[^.]\s*\<class\>"ms=s+1
   syn keyword haxeBranch		break continue nextgroup=haxeUserLabelRef skipwhite
   syn match   haxeUserLabelRef    "\k\+" contained
-  syn keyword haxeScopeDecl       static public protected private abstract override 
+  syn keyword haxeScopeDecl       static public protected private abstract override  inline
 
   " haxe.lang.*
   syn match haxeLangClass "\<System\>"

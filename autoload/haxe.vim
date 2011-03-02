@@ -21,7 +21,7 @@ fun! haxe#LineTillCursor()
 endf
 fun! haxe#CursorPositions()
   let l = haxe#LineTillCursor()
-  let line_till_completion = substitute(l,'[^.: \t()]*$','','')
+  let line_till_completion = substitute(l,'[^.:<> \t()]*$','','')
   let b:char_before_completion = ''
   if len(line_till_completion) > 0
     let b:char_before_completion = line_till_completion[-1:]
@@ -114,16 +114,16 @@ fun! haxe#CompleteHAXEFun(line, col, base, ...)
   " hacky: remove package name. This way the file doesn't have to be put into
   " subdirectories
   let [b,eof] = [&binary, &endofline]
-  set binary
-  set noendofline
+  setlocal binary
+  setlocal noendofline
 
   " don't trigger vim-addon-action actions on buf write
   let g:prevent_action = 1
   silent w!
   let g:prevent_action = 0
   " set old settings
-  exec 'set '.(b?'':'no').'binary'
-  exec 'set '.(eof?'':'no').'endofline'
+  exec 'setlocal '.(b?'':'no').'binary'
+  exec 'setlocal '.(eof?'':'no').'endofline'
 
   let bytePos = len(join(linesTillC,"\n"))
   
