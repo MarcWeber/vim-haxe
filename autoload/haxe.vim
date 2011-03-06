@@ -1,5 +1,5 @@
 " functions will be loaded lazily when needed
-exec scriptmanager#DefineAndBind('s:c','g:vim_haxe', '{}')
+exec vam#DefineAndBind('s:c','g:vim_haxe', '{}')
 
 let s:root = fnamemodify(expand('<sfile>'),':h:h:h')
 
