@@ -37,6 +37,7 @@ ctags language support:
 ~/.ctags:
 
   --langdef=haxe
+  --langmap=haxe:.hx
   --regex-haxe=/^package[ \t]+([A-Za-z0-9_.]+)/\1/p,package/
   --regex-haxe=/^[ \t]*[(@:macro|private|public|static|override|inline|dynamic)( \t)]*function[ \t]+([A-Za-z0-9_]+)/\1/f,function/
   --regex-haxe=/^[ \t]*([private|public|static|protected|inline][ \t]*)+var[ \t]+([A-Za-z0-9_]+)/\2/v,variable/ 
