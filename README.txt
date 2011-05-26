@@ -1,13 +1,17 @@
 _______________________________________________
 INSTALLATION
 
-Install this plugin: http://github.com/MarcWeber/vim-addon-manager
+I highly recommend using VAM (vim-addon-manager): 
+  http://github.com/MarcWeber/vim-addon-manager
+  Then put into your ~/.vimrc:
+  call scriptmanager#Activate(["vim-haxe"])
 
-run once:
-call scriptmanager#Activate(["vim-haxe"])
+alternative way (Pathogen, manual, ...):
+  See vim-haxe-addon-info.txt
+  See key "dependencies". Install all those plugins in some (manual?) way.
 
-Then add to your .vimrc:
-call scriptmanager#Activate(["vim-haxe"])
+
+If you have any trouble contact me.
 
 Use <c-x><c-o> to get completion (based on HaXe)
   Example: this. -> this.addChild(
@@ -73,7 +77,7 @@ based some of the completions on it. But it was too slow. Using tagfiles and
 HaXe only now. Its still used to get the package name.
 
 -----------------------------------------------------------------------
-original: haxeOmnicomplete vim plugin README
+original: haxeOmnicomplete vim plugin README (outdated)
 
 Hello people!
 
