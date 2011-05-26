@@ -9,6 +9,7 @@ I highly recommend using VAM (vim-addon-manager):
 alternative way (Pathogen, manual, ...):
   See vim-haxe-addon-info.txt
   See key "dependencies". Install all those plugins in some (manual?) way.
+  You'll find all those plugins on my github page.
 
 
 If you have any trouble contact me.
