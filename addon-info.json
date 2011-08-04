@@ -5,9 +5,9 @@
   "maintainer" : "Marc Weber <marco-oweber@gmx.de>",
   "repository" : {"type": "git", "url": "git://github.com/MarcWeber/vim-haxe.git"},
   "dependencies" : {
-    "vim-addon-mw-utils": {},
     "tlib": {},
     "vim-addon-views": {},
+    "vim-addon-mw-utils": {},
     "vim-addon-actions": {},
     "vim-addon-goto-thing-at-cursor": {},
     "vim-addon-background-cmd": {},
