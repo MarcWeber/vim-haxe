@@ -1006,7 +1006,7 @@ endf
 
 " TODO refactor, shared by vim-addon-ocaml, vim-addon-urweb ?
 fun! haxe#TagAndAdd(d, pat)
-  call vcs_checkouts#ExecIndir([{'d': a:d, 'c': g:vim_haxe_ctags_command_recursive.' '.a:pat}])
+  call vam#utils#ExecInDir([{'d': a:d, 'c': g:vim_haxe_ctags_command_recursive.' '.a:pat}])
   exec 'set tags+='.substitute(a:d,',','\\\\,','g').'/tags'
 endf
 

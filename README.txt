@@ -76,20 +76,3 @@ Additional notes:
 This VimL lib also contains a very basic .hx file parser. At the beginning I
 based some of the completions on it. But it was too slow. Using tagfiles and
 HaXe only now. Its still used to get the package name.
-
------------------------------------------------------------------------
-original: haxeOmnicomplete vim plugin README (outdated)
-
-Hello people!
-
-This is my first try at giving something back to the comunity, 
-so please bear with my errors!
-
-This plugin enables the use of omnicomplete in haxe files 
-in vim. After a dot you press CTRL-X CTRL-O (your custom 
-mappings could have changed those bindings) and this
-plugin will call the haxe compiler and return a list of
-the methods and properties of the word before the dot.
-You can navigate the list with CTRL-N and CTRL-P.
-It that word has no properties nor methods, nothing will be
-returned. Simple, huh?
