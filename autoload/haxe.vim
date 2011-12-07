@@ -890,7 +890,8 @@ fun! haxe#CompileRHS(...)
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     elseif target == "run-neko"
       let args = actions#VerifyArgs(['neko',nekoFile])
-      return "call bg#RunQF(".string(args).", 'c', ".string("none").")"
+      let ef = 'Called\ from\ %f\ line\ %l'
+      return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     endif
   endif
 

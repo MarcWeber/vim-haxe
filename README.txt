@@ -67,10 +67,17 @@ compile to
   -neko
   -cpp
   -php
-(this will create a tmp.hxml file)
+The fastest way to do so is just type "hxml" or "cpp" or "neko" or "php"
+and the list will be filtered.
+If you select the hxml target you can choose a custom target.
+c-tags will be generated for you automatically - and tags are added to &tags
+depending on target which is the reason that --next will never be supported.
+When using "hxml" you have to choose the .hxml file completion depends on (tab
+completion supported). The other default targets write a tmp.hxml temporary
+file.
 
-compile using hxml (you'll be asked for the .hxml file). Use tab completion to
-select the one you want to work with.
+Use snipmate and snippets/haxe_hxml.snippets snippets to write .hxml files faster.
+
 
 Additional notes:
 This VimL lib also contains a very basic .hx file parser. At the beginning I
