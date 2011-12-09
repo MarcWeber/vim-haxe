@@ -696,16 +696,31 @@ endf
 
 fun! haxe#gfHandler()
   let r = []
-  let class = expand("<cword>")
-  for d in haxe#ThingByString(class)
-    call add(r, {'filename': d['file'], 'break': 1, 'line_nr': get(d,'line',0), 'info': d['what'] })
-    call add(r, {'filename': views#View('fun',['haxe#ClassView',class], 1), 'break': 1})
-  endfor
+  let line = getline('.')
+  let reg = '^\(import\|using\)\s\+\(\S*\)\s*;.*'
+  if line =~ reg
+    let m = matchlist(line, reg)
+    let parsed = haxe#BuildHXML()
+    let path = substitute(m[2],'\.','/','g').'.hx'
+    for cp in parsed.cps
+      let f = cp.'/'.path
+      if filereadable(f)
+        call add(r, {'filename': f, 'break': 1})
+        break
+      endif
+    endfor
+  else
+    let class = expand("<cword>")
+    for d in haxe#ThingByString(class)
+      call add(r, {'filename': d['file'], 'break': 1, 'line_nr': get(d,'line',0), 'info': d['what'] })
+      call add(r, {'filename': views#View('fun',['haxe#ClassView',class], 1), 'break': 1})
+    endfor
 
-  " Flex docs
-  for f in haxe#HtmlDocFor(class)
-    call add(r, {'exec': haxe#DocAction(f) , 'break': 1, 'info': 'flex docs '.class})
-  endfor
+    " Flex docs
+    for f in haxe#HtmlDocFor(class)
+      call add(r, {'exec': haxe#DocAction(f) , 'break': 1, 'info': 'flex docs '.class})
+    endfor
+  endif
   return r
 endf
 
