@@ -1,5 +1,6 @@
 " functions will be loaded lazily when needed
-exec vam#DefineAndBind('s:c','g:vim_haxe', '{}')
+" exec vam#DefineAndBind('s:c','g:vim_haxe', '{}')
+if !exists('g:vim_haxe') | let g:vim_haxe = {} | endif | let s:c = g:vim_haxe
 
 let s:root = fnamemodify(expand('<sfile>'),':h:h:h')
 
@@ -702,7 +703,7 @@ fun! haxe#gfHandler()
     let m = matchlist(line, reg)
     let parsed = haxe#BuildHXML()
     let path = substitute(m[2],'\.','/','g').'.hx'
-    for cp in parsed.cps
+    for cp in parsed.cps + ["."]
       let f = cp.'/'.path
       if filereadable(f)
         call add(r, {'filename': f, 'break': 1})
