@@ -184,6 +184,7 @@ fun! haxe#CompleteHAXEFun(line, col, base, ...)
     call map(lstXML,'haxe#HaxePrepareList(v:val)') " Get rid of the xml in the other lines
     let lstComplete = [] " Initialize our completion list
     for item in lstXML " Create a dictionary for each line, and add them to a list
+      if item == '' | continue | endif
       let element = split(item,"*")
       if len(element) == 1 " Means we only got a package class name
         let dicTmp={'word': element[0]}
@@ -374,10 +375,7 @@ fun! haxe#BuildHXMLPath(...)
   else
     let new_ = g:haxe_build_hxml
   endif
-  if new_ != old
-    let g:haxe_build_hxml=new_
-    call haxe#HXMLChanged()
-  endif
+  let g:haxe_build_hxml = new_
   return g:haxe_build_hxml
 endf
 
@@ -397,6 +395,11 @@ fun! haxe#ParseArgs(s)
   let args_from_hxml = a:s
 
   let d['ExtraCompletArgs'] = args_from_hxml
+
+  let jsFile = matchstr(args_from_hxml, '-js\s\+\zs\S\+\ze')
+  if jsFile != ''
+    let d['js'] = jsFile
+  endif
 
   let flashTargetVersion = matchstr(args_from_hxml, '-swf-version\s\+\zs[0-9.]\+\ze')
   if flashTargetVersion != ''
@@ -444,10 +447,16 @@ fun! haxe#FindLib(name)
 endf
 
 " cached version of current build.hxml file
+let s:old_hxml_contents = {}
 fun! haxe#BuildHXML()
-  return cached_file_contents#CachedFileContents(
+  let old = s:old_hxml_contents
+  let s:old_hxml_contents = cached_file_contents#CachedFileContents(
     \ haxe#BuildHXMLPath(),
     \ s:c['f_scan_hxml'] )
+  if (s:old_hxml_contents != old)
+    call haxe#HXMLChanged()
+  endif
+  return s:old_hxml_contents
 endf
 
 fun! haxe#FlashDevelopCheckout()
@@ -888,11 +897,17 @@ endf
 fun! haxe#CompileRHS(...)
   let target = a:0 > 0 ? a:1 : ""
   let ef= 
-        \  '%f:%l:\ characters\ %c-%*[^\ ]\ %m,'
+        \ '%f:%l:\ characters\ %c-%*[^\ ]\ %m,'
         \ .'%f:%l:\ %m'
 
   if target == ""
     return "call bg#RunQF(['haxe',".string(haxe#BuildHXMLPath())."], 'c', ".string(ef).")"
+  endif
+
+  if target == "hxml-nodejs"
+    let dummyArgs = ''
+    let onFinish = funcref#Function('haxe#RestartNodejs', {'args': [dummyArgs] })
+    return "call bg#RunQF(['haxe',".string(haxe#BuildHXMLPath())."], 'c', ".string(ef).", ".string(onFinish).")"
   endif
 
   let class = expand('%:r')
@@ -929,7 +944,7 @@ fun! haxe#CompileRHS(...)
     let jsFront = class.".js"
 
     if target == "target-js"
-      let args = actions#VerifyArgs(['haxe','-main',class, '--js-namespace', 'HaXeJS', '-js',jsFront])
+      let args = actions#VerifyArgs(['haxe','-main',class, '-js',jsFront])
       call s:tmpHxml(args[1:])
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
     elseif target == "run-js"
@@ -965,6 +980,56 @@ fun! haxe#CompileRHS(...)
 
 endfun
 
+" refactor: also used in vim-addon-urweb
+fun! haxe#RestartNodejs(port, status)
+  if 1*a:status == 0
+    let jsFile = haxe#BuildHXML()['js']
+
+    let cmd = 'nodejs '.shellescape(jsFile)
+
+    if get(s:c,'use_vim_addon_async',0)
+      if has_key(s:c, 'nodejs_buf')
+        " kill
+        let ctx = getbufvar(s:c.nodejs_buf, 'ctx')
+        call ctx.kill()
+      endif
+
+      " restart
+      let ctx = {'cmd':cmd, 'move_last':1}
+      if has_key(s:c, 'nodejs_buf')
+        let ctx.log_bufnr = s:c.nodejs_buf
+      endif
+      call async_porcelaine#LogToBuffer(ctx)
+      let s:c.nodejs_buf = bufnr('%')
+
+      exec 'command! KillNodejs call getbufvar(g:vim_haxe.nodejs_buf, "ctx").kill()'
+    else
+
+      " echoing multiple lines is annoying
+      let messages = []
+      call add(messages,"restarting nodejs ".jsFile)
+
+      if !has_key(s:c,'pid_file')
+        let s:c.pid_file = tempname()
+      endif
+      let pidFile = s:c.pid_file
+
+      let p_e = shellescape(pidFile)
+      if filereadable(pidFile)
+        call add(messages, "killing server")
+        call system('kill -9 `cat '.p_e.'`')
+      endif
+
+      exec vam#DefineAndBind('tmpFile','g:nodejs_server_log','tempname()')
+      call system(cmd .' &> '.shellescape(tmpFile).' & jobs -p %1 > '.p_e)
+      let pid = readfile(pidFile)[0]
+      call add(messages," restarted (".pid.", port : ".a:port.')')
+      echom join(messages,' - ')
+      exec 'command! KillNodejs !kill -9 '.pid
+    endif
+  endif
+endf
+
 " write tmp.hxml file to make completion work
 " yes - this isn't the nicest solution.
 fun! s:tmpHxml(args)
@@ -977,7 +1042,6 @@ endf
 fun! haxe#HXMLChanged()
   let parsed = haxe#BuildHXML()
   let words = split(parsed['ExtraCompletArgs'],'\s\+')
-  echo words
   if index(words,"-swf9") >= 0
     let subdir = "flash9"
   elseif index(words,"-swf-version") >= 0

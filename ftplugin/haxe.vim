@@ -24,3 +24,5 @@ if !exists('did_import_mapping') && !exists('g:codefellow_no_import_mapping')
 endif
 
 let b:match_words='function.*{:return:},switch.*{:case:},\<if\>:\<else\>'
+
+setlocal comments=s1:/*,mb:*,ex:*/,://
