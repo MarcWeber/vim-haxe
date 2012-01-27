@@ -31,6 +31,14 @@
 "
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+" exec vam#DefineAndBind('s:c','g:vim_haxe','{}')
+if !exists('g:vim_haxe') | let g:vim_haxe = {} | endif | let s:c = g:vim_haxe
+
+
+let s:c.complete_lhs_haxe = get(s:c, 'complete_lhs_haxe', '<c-x><c-o>')
+let s:c.complete_lhs_tags = get(s:c, 'complete_lhs_tags', '<c-x><c-u>')
+
+
 if !exists('g:vim_haxe_no_filetype')
   " Map the keys /p and /l to HaxeAddClasspath() and HaxeAddLib() respectively.
   " Mapping could be different if you changed your <LocalLeader> key.
@@ -74,22 +82,5 @@ for target in ["neko","cpp","php","swf","js"]
 endfor
 call actions#AddAction('run haxe compilation result target  rhino', {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["run-rhino-js"] })})
 call actions#AddAction('run haxe compilation result target  rhino', {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["run-rhino-js"] })})
-
-
-" register completions functions
-fun! s:RegisterCompletions()
-  let completions =  [
-        \ {'description' : 'HAXE complete functions', 'func': 'haxe#CompleteHAXE'},
-        \ {'description' : 'HAXE complete classes', 'func': 'haxe#CompleteClassNames'},
-        \ ]
-
-  for c in completions
-    let c['scope'] = 'haxe'
-    let c['completeopt'] = 'preview,menu,menuone'
-    call vim_addon_completion#RegisterCompletionFunc(c)
-  endfor
-endf
-
-call s:RegisterCompletions()
 
 command! -nargs=* NekoTraceToHaxe call haxe#NekoTraceToHaXe(<f-args>)
