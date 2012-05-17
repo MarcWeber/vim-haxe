@@ -376,6 +376,10 @@ fun! haxe#BuildHXMLPath(...)
     let new_ = g:haxe_build_hxml
   endif
   let g:haxe_build_hxml = new_
+  if old == ""
+    " force tagging
+    call haxe#BuildHXML()
+  endif
   return g:haxe_build_hxml
 endf
 
@@ -1042,9 +1046,9 @@ endf
 fun! haxe#HXMLChanged()
   let parsed = haxe#BuildHXML()
   let words = split(parsed['ExtraCompletArgs'],'\s\+')
-  if index(words,"-swf9") >= 0
+  if index(words,'-swf9') >= 0
     let subdir = "flash9"
-  elseif index(words,"-swf-version") >= 0
+  elseif index(words,"-swf-version") >= 0 || index(words,"-swf") >= 0
     let subdir = "flash"
   else
     for i in ['cpp','php','neko','js']
@@ -1056,7 +1060,7 @@ fun! haxe#HXMLChanged()
   endif
 
   let std = haxe#HaxeSourceDir().'/std/'
-  let dirToTag = std.subdir
+  let dirToTag = std.'/'.subdir
   " TODO think about whether an existing ctaging library can be used?
   if (!exists('g:vim_haxe_ctags_command_recursive'))
     let g:vim_haxe_ctags_command_recursive = "ctags -R "
@@ -1087,7 +1091,7 @@ endf
 
 " TODO refactor, shared by vim-addon-ocaml, vim-addon-urweb ?
 fun! haxe#TagAndAdd(d, pat)
-  call vam#utils#ExecInDir([{'d': a:d, 'c': g:vim_haxe_ctags_command_recursive.' '.a:pat}])
+  call vam#utils#ExecInDir( a:d, g:vim_haxe_ctags_command_recursive.' '.a:pat)
   exec 'set tags+='.substitute(a:d,',','\\\\,','g').'/tags'
 endf
 
