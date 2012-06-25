@@ -38,20 +38,9 @@ grep -r  vim_haxe .
 let g:vim_haxe_haxe_src_dir='directory' if you don't like the default
 PLUGIN_ROOT.'/haxe-src'
 
-ctags language support:
-~/.ctags:
+ctags language support see:
 
-  --langdef=haxe
-  --langmap=haxe:.hx
-  --regex-haxe=/^package[ \t]+([A-Za-z0-9_.]+)/\1/p,package/
-  --regex-haxe=/^[ \t]*[(@:macro|private|public|static|override|inline|dynamic)( \t)]*function[ \t]+([A-Za-z0-9_]+)/\1/f,function/
-  --regex-haxe=/^[ \t]*([private|public|static|protected|inline][ \t]*)+var[ \t]+([A-Za-z0-9_]+)/\2/v,variable/ 
-  --regex-haxe=/^[ \t]*package[ \t]*([A-Za-z0-9_]+)/\1/p,package/
-  --regex-haxe=/^[ \t]*(extern[ \t]+)?class[ \t]+([A-Za-z0-9_]+)[ \t]*[^\{]*/\2/c,class/
-  --regex-haxe=/^[ \t]*(extern[ \t]+)?interface[ \t]+([A-Za-z0-9_]+)/\2/i,interface/
-  --regex-haxe=/^[ \t]*typedef[ \t]+([A-Za-z0-9_]+)/\1/t,typedef/
-  --regex-haxe=/^[ \t]*enum[ \t]+([A-Za-z0-9_]+)/\1/t,typedef/
-  --regex-haxe=/^[ \t]*+([A-Za-z0-9_]+)(;|\([^)]*:[^)]*\))/\1/t,enum_field/
+  http://haxe.org/com/ide
 
 Vim will then automatically checkout haxe sources and tag the std .hx files for you
 
@@ -83,3 +72,14 @@ Additional notes:
 This VimL lib also contains a very basic .hx file parser. At the beginning I
 based some of the completions on it. But it was too slow. Using tagfiles and
 HaXe only now. Its still used to get the package name.
+
+
+-----------------------------------------------------------------------
+related work:
+* vaxe:
+  (requires python, was written for the sake of writing something new)
+  https://github.com/jdonaldson/vaxe
+  https://groups.google.com/forum/#!searchin/haxelang/vim/haxelang/xJm78HCwc0Y/7kX1JCBD18oJ
+
+  collaborative work is going on. See thread "Vihxen: Vim + Haxe"
+  Vihxen is the initial name and was renamed to vaxe.
