@@ -76,7 +76,7 @@ command! -nargs=0 CreateDummyFiles call haxe#CreateDummyFiles()
 
 call actions#AddAction('run haxe compiler (hxml)', {'action': funcref#Function('haxe#CompileRHS')})
 call actions#AddAction('run haxe compiler (hxml, restart nodejs)', {'action': funcref#Function('haxe#CompileRHS', { 'args': ["hxml-nodejs"]})})
-for target in ["neko","cpp","php","swf","js"]
+for target in ["neko","cpp","php","swf","js",'java']
   call actions#AddAction('run haxe compiler targeting '.target, {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["target-".target] })})
   call actions#AddAction('run haxe compilation result target '.target, {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["run-".target] })})
 endfor

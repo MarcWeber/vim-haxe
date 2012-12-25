@@ -255,7 +255,7 @@ fun! haxe#CompleteClassNamesFun(line, col, base, ...)
       " find class providing functions
       let class = ""
       for [k,v] in items(get(scanned, 'classes', {}))
-        if index(keys(get(v,'functions', {})), fun_name) != -1
+        if index(map(keys(get(v,'functions', {})), 'substitute(v:val,"<.*","","g")'), fun_name) != -1
           let class = k
         endif
         unlet k v
@@ -1051,7 +1051,7 @@ fun! haxe#HXMLChanged()
   elseif index(words,"-swf-version") >= 0 || index(words,"-swf") >= 0
     let subdir = "flash"
   else
-    for i in ['cpp','php','neko','js']
+    for i in ['cpp','php','neko','js','java']
       if index(words,"-".i) >= 0
         let subdir = i
         break

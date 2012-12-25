@@ -53,22 +53,14 @@ snippet try
 	  // Ignore any errors.
 	}
 snippet for
-	for( ${1:var} in ${2:iterator} )
+	for(${1:var} in ${2:iterator})
 snippet class HAXE
-	class `expand('%:t:r')` {
-	
-		function new(arg) {
-			super(arg)
-		}
-
-		static function main() {
-			trace("hello world");
-		}    
-
+	class ${1:`expand('%:t:r')`} {
+		${2}
 	}
 snippet main
 	static function main() {
-		trace("hello world");
+		trace("hello world");${2}
 	}
 snippet new
 	public function new(${1:arg}) {
@@ -84,13 +76,20 @@ snippet pcf public function
 		${3}
 	}
 
-snippet pf static public function
+snippet pf public function
 	public function ${1:name}(${2:arg}) {
 		${3}
 	}
 
+snippet sf static function
+	static function ${1:name}(${2:arg}) {
+	}
 snippet spf static public function
 	static public function ${1:name}(${2:arg}) {
+		${3}
+	}
+snippet psf public static function
+	public static function ${1:name}(${2:arg}) {
 		${3}
 	}
 
@@ -154,6 +153,8 @@ snippet g_fill
 	$1.endFill();
 snippet cast
 	cast(${1:cast_this}, ${2:type})
+snippet f
+	function(${1}){ return ${2}; }
 snippet interface
 	interface ${1:name}${2: implements this}${3:, implements other}{
 		var thing : String;
@@ -161,11 +162,16 @@ snippet interface
 	}
 		
 snippet pv public var
-	public var
-# snipMate does not upport making vars upper case or such. (See its documentation) That's why
-# I'm using a function to generate the snippet.
+	public var 
+snippet sv public
+	static var 
+snippet psv public
+	static var 
 snippet getter_setter
 	`haxe#GetterSetter(0)`
+
+snippet lazy_property
+	`haxe_snipmate#LazyProperty()`
 
 snippet getter_setter_action
 	`haxe_snipmate#GetterSetter(1)`
@@ -246,3 +252,5 @@ snippet writeFile
 			for (s in lines) f.writeString(s+"\n");
 			f.close();
 		}
+snippet i
+	import 
