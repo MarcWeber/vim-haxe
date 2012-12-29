@@ -223,6 +223,9 @@ endf
 fun! haxe#CompleteClassNamesFun(line, col, base, ...)
   let opts = a:0 > 0 ? a:1 : {}
 
+  let imports = map(filter(getline(1,'$'), 'v:val =~ "^import"'), 'matchstr(v:val,"import\\s*\\zs[^; \\t]*")')
+  let regex_drop_import = '^\%('.join(map(imports, 'matchstr(v:val, "^\\zs.*\\ze\\.[^.]*")'),'\|').'\)'
+
   let additional_regex = ""
   if get(opts, "use_additional_regex", 0)
     let patterns = vim_addon_completion#AdditionalCompletionMatchPatterns(a:base
@@ -261,8 +264,12 @@ fun! haxe#CompleteClassNamesFun(line, col, base, ...)
         unlet k v
       endfor
       let p .= class.'.'
+      let p2 = substitute(p, regex_drop_import.'\.','','')
       let args = matchstr(t['cmd'], '.*\zs([^{]*')
-      call complete_add({'word': p.fun_name.'(', 'menu': args.' tag file: '.t['filename']})
+      call complete_add({'word': p2.fun_name.'(', 'menu': args.' tag file: '.t['filename']})
+      if (p != p2)
+        call complete_add({'word': p.fun_name.'(', 'menu': args.' tag file: '.t['filename']})
+      endif
     endif
   endfor
   return []
