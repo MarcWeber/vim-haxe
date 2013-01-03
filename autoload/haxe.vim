@@ -476,7 +476,7 @@ fun! haxe#FlashDevelopCheckout()
     if input('trying to checkout flash develop sources into '.srcdir.'. ok ? [y/n]') == 'y'
       call mkdir(srcdir,'p')
       " checking out std ony would suffice. disk is cheap today..
-      call vcs_checkouts#Checkout(srcdir, {'type':'svn','url': 'http://flashdevelop.googlecode.com/svn/trunk' })
+      call vam#vcs#Checkout(srcdir, {'type':'svn','url': 'http://flashdevelop.googlecode.com/svn/trunk' })
     else
       return ""
     endif
@@ -909,6 +909,7 @@ fun! haxe#CompileRHS(...)
   let target = a:0 > 0 ? a:1 : ""
   let ef= 
         \ '%f:%l:\ characters\ %c-%*[^\ ]\ %m,'
+        \ .'%f:%l:\ character\ %c\ %m,'
         \ .'%f:%l:\ %m'
 
   if target == ""
@@ -1108,7 +1109,7 @@ fun! haxe#HaxeSourceDir()
     if input('trying to checkout haxe-src into '.srcdir.'. ok ? [y/n]') == 'y'
       call mkdir(srcdir,'p')
       " checking out std ony would suffice. disk is cheap today..
-      call vcs_checkouts#Checkout(srcdir, {'type':'svn','url': 'http://haxe.googlecode.com/svn/trunk' })
+      call vam#vcs#Checkout(srcdir, {'type':'svn','url': 'http://haxe.googlecode.com/svn/trunk' })
     endif
   endif
   return srcdir

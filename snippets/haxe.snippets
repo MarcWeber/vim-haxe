@@ -17,17 +17,11 @@ snippet iterator
 	    }
 	}
 snippet switch
-	switch (<++>){
-	      case <++>:
-	        trace("hello world");
-	      case 1:
-	        var but = flash.Lib.current.attachMovie("button", "but001", 0);
-	        but._x = 10;
-	        but._y = 20;
-	      case 2,3:
-	        trace("undefined");
-	      case default:
-	    }
+	switch($1) {
+		case _: $2
+	}
+snippet caseg
+	case [a, b] if (b > a):
 snippet case
 	case ${1}:
 		${2}
@@ -155,6 +149,8 @@ snippet cast
 	cast(${1:cast_this}, ${2:type})
 snippet f
 	function(${1}){ return ${2}; }
+snippet fr
+	function(${1}) return ${2};
 snippet interface
 	interface ${1:name}${2: implements this}${3:, implements other}{
 		var thing : String;
