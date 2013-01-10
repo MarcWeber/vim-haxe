@@ -260,6 +260,7 @@ fun! haxe#CompleteClassNamesFun(line, col, base, ...)
       for [k,v] in items(get(scanned, 'classes', {}))
         if index(map(keys(get(v,'functions', {})), 'substitute(v:val,"<.*","","g")'), fun_name) != -1
           let class = k
+          break
         endif
         unlet k v
       endfor
@@ -797,7 +798,7 @@ fun! haxe#ScanASFile(filename)
   let file_lines = readfile(a:filename)
 
   let regex_interface = '\%(interface\)\s\+\([^ ]*\)'
-  let regex_class = '\%(class\)\s\+\([^{ ]*\)\%(\s\+extends\s\+\([^ <]*\)\)\?'
+  let regex_class = '^\s*\%(\<class\>\)\s\+\([^{ ]*\)\%(\s\+extends\s\+\([^ <]*\)\)\?'
   let regex_package = s:regex_package
   let regex_function = '\%(function\)\s\+\([^{(\n\r ]*\)'
   let regex_enum = '^\s*enum\s\+\(\S\+\)'
@@ -913,7 +914,9 @@ fun! haxe#CompileRHS(...)
         \ .'%f:%l:\ %m'
 
   if target == ""
-    return "call bg#RunQF(['haxe',".string(haxe#BuildHXMLPath())."], 'c', ".string(ef).")"
+    let args = ['haxe',haxe#BuildHXMLPath()]
+    " let args = actions#VerifyArgs(args)
+    return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
   endif
 
   if target == "hxml-nodejs"
@@ -935,6 +938,19 @@ fun! haxe#CompileRHS(...)
       let args = actions#VerifyArgs(['neko',nekoFile])
       let ef = 'Called\ from\ %f\ line\ %l'
       return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
+    endif
+  endif
+
+  if target[-4:] == "java"
+    let javadir = "build-java"
+
+    if target == "target-java"
+      let args = actions#VerifyArgs(['haxe','-main',class,'-java',javadir])
+      call s:tmpHxml(args[1:])
+      return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
+    elseif target == "run-java"
+      let args = actions#VerifyArgs(['php',phpDir.'/'.phpFront])
+      return "call bg#RunQF(".string(args).", 'c', ".string("none").")"
     endif
   endif
 
@@ -1054,6 +1070,9 @@ endf
 fun! haxe#HXMLChanged()
   let parsed = haxe#BuildHXML()
   let words = split(parsed['ExtraCompletArgs'],'\s\+')
+
+  let s:c.tag_calls = []
+
   if index(words,'-swf9') >= 0
     let subdir = "flash9"
   elseif index(words,"-swf-version") >= 0 || index(words,"-swf") >= 0
@@ -1099,8 +1118,18 @@ endf
 
 " TODO refactor, shared by vim-addon-ocaml, vim-addon-urweb ?
 fun! haxe#TagAndAdd(d, pat)
+  let params = [a:d, a:pat]
+  if (index(s:c.tag_calls, params) == -1)
+    call add(s:c.tag_calls, params)
+  endif
   call vam#utils#ExecInDir( a:d, g:vim_haxe_ctags_command_recursive.' '.a:pat)
   exec 'set tags+='.substitute(a:d,',','\\\\,','g').'/tags'
+endf
+
+fun! haxe#Retag()
+  for params in s:c.tag_calls
+    call call('haxe#TagAndAdd', params)
+  endfor
 endf
 
 fun! haxe#HaxeSourceDir()
@@ -1146,6 +1175,25 @@ endf
 
 
 " second (fast) implementation of adding imports based on tags {{{1
+
+fun! haxe#FormatErrors() abort
+  let r = []
+  for x in getqflist()
+    if has_key(x, 'text')
+      call add(r, x)
+      let reg = '\(lines[^:]*:[^:]*\): \(.*\) should be \(.*\)'
+      if x.text =~ reg
+        let l = matchlist(x.text, reg)
+        x.text = l[1]
+        call add(r, {'text': l[2]})
+        call add(r, {'text': l[3]})
+      end
+    else
+      call add(r, x)
+    endif
+  endfor
+  call setqflist(r)
+endf
 
 fun! haxe#AddImportFromQuickfix() abort
 

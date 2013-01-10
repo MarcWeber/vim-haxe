@@ -32,6 +32,7 @@ if !exists('did_import_mapping') && !exists('g:codefellow_no_import_mapping')
 
 
   noremap \i :call<space>haxe#AddImportFromQuickfix()<cr>
+  noremap \f :call<space>haxe#FormatErrors()<cr>
 endif
 
 let b:match_words='function.*{:return:},switch.*{:case:},\<if\>:\<else\>'
