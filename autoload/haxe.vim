@@ -445,6 +445,7 @@ fun! haxe#ParseArgs(s)
   return d
 endf
 
+" may return multiple paths
 fun! haxe#FindLib(name)
   return filter(split(system('haxelib path '.a:name),"\n"),'v:val !~ "^-[DL]"')
 
@@ -1100,8 +1101,10 @@ fun! haxe#HXMLChanged()
   " Haxe extra classes
   call haxe#TagAndAdd(std.'/haxe', '.')
 
-  for lib in values(parsed['libs'])
-    call haxe#TagAndAdd(lib, '.')
+  for libs in values(parsed['libs'])
+    for lib in libs
+      call haxe#TagAndAdd(lib, '.')
+    endfor
   endfor
 
   let v = get(parsed,'flash_target_version',"")
