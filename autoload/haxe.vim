@@ -1101,9 +1101,13 @@ fun! haxe#HXMLChanged()
   " Haxe extra classes
   call haxe#TagAndAdd(std.'/haxe', '.')
 
+  let did_tag = {}
   for libs in values(parsed['libs'])
     for lib in libs
-      call haxe#TagAndAdd(lib, '.')
+      if !has_key(did_tag, lib)
+        call haxe#TagAndAdd(lib, '.')
+        let did_tag[lib] = 1
+      endif
     endfor
   endfor
 
