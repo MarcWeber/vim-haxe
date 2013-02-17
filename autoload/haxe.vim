@@ -446,7 +446,8 @@ fun! haxe#ParseArgs(s)
 endf
 
 fun! haxe#FindLib(name)
-  return split(system('haxelib path '.a:name),"\n")[0]
+  let result = substitute(system('haxelib path '.a:name), "-[DL][ ]*[^ \n]*",'','g')
+  return substitute(result, '[ \n]*','','g')
 
   " alternative VimL implementation
   let dir = readfile($HOME."/.haxelib",'b')[0]
