@@ -1187,11 +1187,12 @@ fun! haxe#FormatErrors() abort
   let r = []
   for x in getqflist()
     if has_key(x, 'text')
-      call add(r, x)
-      let reg = '\(lines[^:]*:[^:]*\): \(.*\) should be \(.*\)'
+      call add(r, eval(string(x)))
+      let x = eval(string(x))
+      let reg = '^\(lines \d*-\d* \|lines[^:]*:[^:]*\|characters [^-]*-[^ ]* \): \(.*\) should be \(.*\)'
       if x.text =~ reg
         let l = matchlist(x.text, reg)
-        x.text = l[1]
+        let x.text = l[1]
         call add(r, {'text': l[2]})
         call add(r, {'text': l[3]})
       end
