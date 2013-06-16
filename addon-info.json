@@ -12,7 +12,8 @@
     "vim-addon-goto-thing-at-cursor": {},
     "vim-addon-background-cmd": {},
     "vim-addon-completion": {},
-    "vim-addon-swfmill": {}
+    "vim-addon-swfmill": {},
+    "vim-haxe-syntax": {}
   },
   "description" : "haxe completion for Vim"
 }
