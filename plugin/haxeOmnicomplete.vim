@@ -46,7 +46,7 @@ if !exists('g:vim_haxe_no_filetype')
   " Declaring errorformat to parse the errors that we may encounter during autocomplete.
   " Check for the global variables on load or new haxe file
   augroup Haxe
-    autocmd BufRead,BufNewFile *.m,*.hx setlocal filetype=haxe
+    autocmd BufRead,BufNewFile *.hx setlocal filetype=haxe
       \| nnoremap <silent> <buffer> <LocalLeader>p :call HaxeAddClasspath()<Cr>
       \| nnoremap <silent> <buffer> <LocalLeader>l :call HaxeAddLib()<Cr>
       \| setlocal errorformat=%f:%l:\ characters\ %\\d%\\+-%c\ %m
@@ -84,3 +84,5 @@ call actions#AddAction('run haxe compilation result target  rhino', {'action': f
 call actions#AddAction('run haxe compilation result target  rhino', {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["run-rhino-js"] })})
 
 command! -nargs=* NekoTraceToHaxe call haxe#NekoTraceToHaXe(<f-args>)
+
+command! -nargs=1 HaxeServerPort let g:vim_haxe.server_port = <f-args>

@@ -48,6 +48,10 @@ snippet try
 	}
 snippet for
 	for(${1:var} in ${2:iterator})
+snippet c
+	class ${1:`expand('%:t:r')`} {
+		${2}
+	}
 snippet class HAXE
 	class ${1:`expand('%:t:r')`} {
 		${2}

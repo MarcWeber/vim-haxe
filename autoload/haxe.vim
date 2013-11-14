@@ -136,7 +136,7 @@ fun! haxe#CompleteHAXEFun(line, col, base, ...)
         \ ? list[1].'.'
         \ : ""
 
-  let strCmd="haxe --no-output -main " . package.classname . " " . substitute(d['ExtraCompletArgs'],'-main\s\+[^ ]*','',''). " --display " . '"' . expand('%') . '"' . "@" . bytePos
+  let strCmd="haxe --no-output ".join(haxe#PortArgs(),' '). " -main " . package.classname . " " . substitute(d['ExtraCompletArgs'],'-main\s\+[^ ]*','',''). " --display " . '"' . expand('%') . '"' . "@" . bytePos
 
   try
     let dolstErrors = 0
@@ -235,7 +235,7 @@ fun! haxe#CompleteClassNamesFun(line, col, base, ...)
 
   " tag based, cause its faster
   for t in taglist('^'.a:base.'.*')+(additional_regex == "" ? [] : taglist(additional_regex))
-    if t['kind'] == 'c'
+    if t['kind'] =~ 'c\|t'
       let scanned = cached_file_contents#CachedFileContents(t['filename'], s:c['f_scan_as'])
       " add package prefix if not yet imported
       let p = ''
@@ -907,15 +907,20 @@ fun! haxe#FlexDocsDir()
   endif
 endf
 
+fun! haxe#PortArgs()
+  return has_key(s:c, 'server_port') ? ["--connect", s:c.server_port] : []
+endf
+
 fun! haxe#CompileRHS(...)
   let target = a:0 > 0 ? a:1 : ""
   let ef= 
-        \ '%f:%l:\ characters\ %c-%*[^\ ]\ %m,'
+        \ '%f:%l:\ characters\ %c\ %m,'
         \ .'%f:%l:\ character\ %c\ %m,'
         \ .'%f:%l:\ %m'
 
+
   if target == ""
-    let args = ['haxe',haxe#BuildHXMLPath()]
+    let args = ['haxe'] + haxe#PortArgs() + [haxe#BuildHXMLPath()]
     " let args = actions#VerifyArgs(args)
     return "call bg#RunQF(".string(args).", 'c', ".string(ef).")"
   endif
