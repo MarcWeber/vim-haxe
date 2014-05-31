@@ -790,7 +790,7 @@ endf
 let s:classregex='interface\s\+'
 let s:packageregex='^package\s\+\([^\n\r ]*\)'
 
-let s:c['f_scan_as'] = get(s:c, 'f_scan_as', {'func': funcref#Function('haxe#ScanASFile'), 'version' : 6, 'use_file_cache' : 1} )
+let s:c['f_scan_as'] = get(s:c, 'f_scan_as', {'func': funcref#Function('haxe#ScanASFile'), 'version' : 6, 'use_file_cache' : 0} )
 " very simple .as / .hx 'parser'
 " It only stores function names, class names and the line numbers where those
 " functions occur. This way it can be used as tag replacement
@@ -918,6 +918,9 @@ fun! haxe#CompileRHS(...)
         \ .'%f:%l:\ character\ %c\ %m,'
         \ .'%f:%l:\ %m'
 
+  if target == "dynamic"
+    return "call bg#RunQF(['haxe'] + haxe#PortArgs() + [haxe#BuildHXMLPath()], 'c', ".string(ef).")"
+  endif
 
   if target == ""
     let args = ['haxe'] + haxe#PortArgs() + [haxe#BuildHXMLPath()]

@@ -74,7 +74,8 @@ command! -nargs=* -complete=customlist,haxe#HXMLFilesCompletion HXML call haxe#B
 
 command! -nargs=0 CreateDummyFiles call haxe#CreateDummyFiles()
 
-call actions#AddAction('run haxe compiler (hxml)', {'action': funcref#Function('haxe#CompileRHS')})
+call actions#AddAction('run haxe compiler (hxml, args from time of assignment)', {'action': funcref#Function('haxe#CompileRHS')})
+call actions#AddAction('run haxe compiler (hxml, args from env)', {'action': funcref#Function('haxe#CompileRHS', { 'args': ["dynamic"]})})
 call actions#AddAction('run haxe compiler (hxml, restart nodejs)', {'action': funcref#Function('haxe#CompileRHS', { 'args': ["hxml-nodejs"]})})
 for target in ["neko","cpp","php","swf","js",'java']
   call actions#AddAction('run haxe compiler targeting '.target, {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["target-".target] })})
@@ -82,6 +83,8 @@ for target in ["neko","cpp","php","swf","js",'java']
 endfor
 call actions#AddAction('run haxe compilation result target  rhino', {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["run-rhino-js"] })})
 call actions#AddAction('run haxe compilation result target  rhino', {'action': funcref#Function('haxe#CompileRHS', { 'args' : ["run-rhino-js"] })})
+
+call actions#AddAction('run nekoc compiler', {'action': funcref#Function('actions#CompileRHSSimple', {'args': [['call vim_addon_errorformats#SetErrorFormat("nekoc")'], ["nekoc", funcref#Function("return expand('%')") ]]})})
 
 command! -nargs=* NekoTraceToHaxe call haxe#NekoTraceToHaXe(<f-args>)
 
